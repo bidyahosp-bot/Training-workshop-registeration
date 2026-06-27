@@ -1,11 +1,13 @@
 // ============================================
-// Main JavaScript - Updated for new API
+// Main JavaScript - Bidiya Training Hub
 // ============================================
 
 // 🔗 API URL - استبدل برابط Google Apps Script الخاص بك
 const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
 
-// 📊 Load Home Page Data
+// ============================================
+// LOAD HOME PAGE DATA
+// ============================================
 async function loadHomePageData() {
     try {
         const response = await fetch(API_URL);
@@ -16,25 +18,35 @@ async function loadHomePageData() {
             const summary = data.summary || {};
             
             // تحديث العدادات
-            document.getElementById('totalWorkshops').textContent = summary.totalWorkshops || 0;
-            document.getElementById('totalHours').textContent = summary.totalHours || 0;
-            document.getElementById('totalEmployees').textContent = summary.totalEmployees || 0;
+            const totalWorkshops = document.getElementById('totalWorkshops');
+            const totalHours = document.getElementById('totalHours');
+            const totalEmployees = document.getElementById('totalEmployees');
+            
+            if (totalWorkshops) totalWorkshops.textContent = summary.totalWorkshops || 0;
+            if (totalHours) totalHours.textContent = summary.totalHours || 0;
+            if (totalEmployees) totalEmployees.textContent = summary.totalEmployees || 0;
             
             // تحديث الإحصائيات السريعة
             const topEmp = data.topEmployees?.[0];
-            document.getElementById('topEmployee').textContent = topEmp ? 
-                `${topEmp.name} (${topEmp.workshops} ورشة)` : '-';
+            const topEmployeeEl = document.getElementById('topEmployee');
+            if (topEmployeeEl) {
+                topEmployeeEl.textContent = topEmp ? `${topEmp.name} (${topEmp.workshops} ورشة)` : '-';
+            }
             
             const lastEmp = data.lastWorkshop;
-            document.getElementById('lastEmployee').textContent = lastEmp ? 
-                lastEmp.employee : '-';
+            const lastEmployeeEl = document.getElementById('lastEmployee');
+            if (lastEmployeeEl) {
+                lastEmployeeEl.textContent = lastEmp ? lastEmp.employee : '-';
+            }
         }
     } catch (error) {
-        console.error('Error loading data:', error);
+        console.error('Error loading home data:', error);
     }
 }
 
-// 🏅 Get Badge Function
+// ============================================
+// GET BADGE
+// ============================================
 function getBadge(count) {
     if (count >= 100) return { emoji: '🏆', name: 'Legend', color: '#ff6b6b' };
     if (count >= 50) return { emoji: '👑', name: 'Champion', color: '#ffd700' };
@@ -45,7 +57,9 @@ function getBadge(count) {
     return { emoji: '🌟', name: 'Beginner', color: '#4fc3f7' };
 }
 
-// 📅 Format Date Helper
+// ============================================
+// FORMAT DATE
+// ============================================
 function formatDate(dateString) {
     if (!dateString) return '-';
     try {
@@ -60,8 +74,10 @@ function formatDate(dateString) {
     }
 }
 
-// 🌙 Dark Mode Toggle
-document.addEventListener('DOMContentLoaded', () => {
+// ============================================
+// DARK MODE TOGGLE
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
     const toggle = document.getElementById('darkToggle');
     if (toggle) {
         if (localStorage.getItem('bth_dark') === 'true') {
@@ -69,7 +85,7 @@ document.addEventListener('DOMContentLoaded', () => {
             toggle.innerHTML = '<i class="fas fa-sun"></i>';
         }
         
-        toggle.addEventListener('click', () => {
+        toggle.addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
             localStorage.setItem('bth_dark', isDark);
@@ -77,28 +93,29 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
-    // تحميل البيانات إذا كنا في الصفحة الرئيسية
+    // تحميل البيانات في الصفحة الرئيسية
     if (document.getElementById('totalWorkshops')) {
         loadHomePageData();
-        // تحديث تلقائي كل 60 ثانية
         setInterval(loadHomePageData, 60000);
     }
 });
 
-// 📱 PWA Support
+// ============================================
+// PWA SUPPORT
+// ============================================
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register('/sw.js')
-        .then(() => console.log('✅ Service Worker registered'))
-        .catch(err => console.log('❌ Service Worker error:', err));
+        .then(function() { console.log('✅ Service Worker registered'); })
+        .catch(function(err) { console.log('❌ Service Worker error:', err); });
 }
+
 // ============================================
-// GET DEPARTMENTS - جلب الأقسام من API
+// LOAD DEPARTMENTS
 // ============================================
 async function loadDepartments() {
     try {
-        const response = await fetch(`${API_URL}?action=getDepartments`);
+        const response = await fetch(API_URL + '?action=getDepartments');
         const result = await response.json();
-        
         if (result.status === 'success' && result.data) {
             return result.data;
         }
@@ -109,36 +126,21 @@ async function loadDepartments() {
     }
 }
 
-// ============================================
-// DEFAULT DEPARTMENTS - الأقسام الافتراضية
-// ============================================
 function getDefaultDepartments() {
     return [
-        'الأطباء',
-        'التمريض',
-        'التضميد',
-        'الصيدلة',
-        'الأشعة',
-        'الأسنان',
-        'المختبر',
-        'السجلات الطبية',
-        'الإدارة',
-        'التثقيف الصحي',
-        'التغذية'
+        'الأطباء', 'التمريض', 'التضميد', 'الصيدلة',
+        'الأشعة', 'الأسنان', 'المختبر', 'السجلات الطبية',
+        'الإدارة', 'التثقيف الصحي', 'التغذية'
     ];
 }
 
-// ============================================
-// POPULATE DEPARTMENT DROPDOWN - تعبئة قائمة الأقسام
-// ============================================
 async function populateDepartments(selectElement) {
     if (!selectElement) return;
     
     const departments = await loadDepartments();
-    
-    // الاحتفاظ بالخيار الأول
     const firstOption = selectElement.querySelector('option[value=""]');
     selectElement.innerHTML = '';
+    
     if (firstOption) {
         selectElement.appendChild(firstOption);
     } else {
@@ -148,8 +150,7 @@ async function populateDepartments(selectElement) {
         selectElement.appendChild(option);
     }
     
-    // إضافة الأقسام
-    departments.forEach(dept => {
+    departments.forEach(function(dept) {
         const option = document.createElement('option');
         option.value = dept;
         option.textContent = dept;
