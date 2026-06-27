@@ -1,6 +1,5 @@
 // ============================================
 // Register JavaScript - Bidiya Training Hub
-// إرسال البيانات إلى Google Sheets عبر API
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -13,13 +12,11 @@ document.addEventListener('DOMContentLoaded', async function() {
         dateInput.value = today;
     }
     
-    // تعبئة قائمة الأقسام
     const departmentSelect = document.getElementById('department');
     if (departmentSelect) {
         await populateDepartments(departmentSelect);
     }
     
-    // التحقق من صحة الساعات
     const hoursInput = document.getElementById('workshopHours');
     if (hoursInput) {
         hoursInput.addEventListener('input', function() {
@@ -37,21 +34,16 @@ document.addEventListener('DOMContentLoaded', async function() {
         });
     }
     
-    // ============================================
-    // إرسال النموذج عبر API
-    // ============================================
     if (form) {
         form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // جمع البيانات من النموذج
             const formData = new FormData(this);
             const data = {};
-            formData.forEach((value, key) => {
+            formData.forEach(function(value, key) {
                 data[key] = value;
             });
             
-            // تحويل البيانات إلى التنسيق المطلوب
             const workshopData = {
                 employeeName: data['employeeName'] || '',
                 employeeId: data['employeeId'] || '',
@@ -62,48 +54,35 @@ document.addEventListener('DOMContentLoaded', async function() {
                 certificate: data['certificate'] || 'لا'
             };
             
-            // التحقق من صحة الساعات
             if (workshopData.hours < 6) {
                 alert('⚠️ مدة الورشة يجب أن تكون أكثر من 6 ساعات');
                 return;
             }
             
-            // التحقق من الحقول المطلوبة
             if (!workshopData.employeeName || !workshopData.department || 
                 !workshopData.workshopTitle || !workshopData.organizer) {
                 alert('⚠️ يرجى تعبئة جميع الحقول المطلوبة');
                 return;
             }
             
-            // إظهار رسالة جاري التحميل
             const submitBtn = form.querySelector('button[type="submit"]');
             const originalText = submitBtn.innerHTML;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
             submitBtn.disabled = true;
             
             try {
-                // إرسال البيانات إلى API
                 const response = await fetch(API_URL, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(workshopData)
                 });
                 
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    // نجاح التسجيل
-                    alert('✅ تم تسجيل الورشة بنجاح!\n' +
-                          '📚 ' + workshopData.workshopTitle + '\n' +
-                          '👤 ' + workshopData.employeeName);
-                    
-                    // إعادة تعيين النموذج
+                    alert('✅ تم تسجيل الورشة بنجاح!\n📚 ' + workshopData.workshopTitle + '\n👤 ' + workshopData.employeeName);
                     form.reset();
                     if (dateInput) dateInput.value = today;
-                    
-                    // تحديث البيانات في الصفحة الرئيسية
                     if (typeof loadHomePageData === 'function') {
                         loadHomePageData();
                     }
@@ -114,35 +93,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 console.error('Error:', error);
                 alert('❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
             } finally {
-                // إعادة الزر إلى حالته الأصلية
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
             }
         });
     }
 });
-
-// ============================================
-// دالة مساعدة لتحديث البيانات (اختيارية)
-// ============================================
-async function refreshDashboardData() {
-    try {
-        const response = await fetch(API_URL);
-        const result = await response.json();
-        if (result.status === 'success') {
-            // تحديث العدادات إذا كانت موجودة
-            const summary = result.data.summary || {};
-            const elements = {
-                'totalWorkshops': summary.totalWorkshops,
-                'totalHours': summary.totalHours,
-                'totalEmployees': summary.totalEmployees
-            };
-            for (const [id, value] of Object.entries(elements)) {
-                const el = document.getElementById(id);
-                if (el) el.textContent = value || 0;
-            }
-        }
-    } catch (error) {
-        console.error('Error refreshing data:', error);
-    }
-}
