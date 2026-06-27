@@ -3,18 +3,22 @@
 // إرسال البيانات إلى Google Sheets عبر API
 // ============================================
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async function() {
     const form = document.getElementById('registerForm');
     const today = new Date().toISOString().split('T')[0];
     const dateInput = document.getElementById('workshopDate');
+    
     if (dateInput) {
         dateInput.max = today;
         dateInput.value = today;
     }
+    
+    // تعبئة قائمة الأقسام
     const departmentSelect = document.getElementById('department');
     if (departmentSelect) {
         await populateDepartments(departmentSelect);
     }
+    
     // التحقق من صحة الساعات
     const hoursInput = document.getElementById('workshopHours');
     if (hoursInput) {
