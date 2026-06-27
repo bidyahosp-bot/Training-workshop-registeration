@@ -1,0 +1,100 @@
+<!-- ============================================ -->
+<!-- REGISTER FORM - Updated -->
+<!-- ============================================ -->
+<section class="register-page">
+    <div class="container">
+        <div class="page-header">
+            <h1>✏️ <span data-i18n="register_title">تسجيل ورشة تدريبية جديدة</span></h1>
+            <p data-i18n="register_subtitle">أضف مشاركتك التدريبية لتنضم إلى مجتمع التعلم المستمر</p>
+        </div>
+
+        <div class="register-card">
+            <form id="registerForm">
+                <!-- Employee Info -->
+                <div class="form-section">
+                    <h3><i class="fas fa-user"></i> <span data-i18n="employee_info">معلومات الموظف</span></h3>
+                    
+                    <div class="form-group">
+                        <label for="employeeName" data-i18n="employee_name">اسم الموظف *</label>
+                        <input type="text" id="employeeName" name="employeeName" required 
+                               placeholder="الاسم الثلاثي">
+                    </div>
+                    
+                     <label for="employeeId" data-i18n="employee_id">الرقم الوظيفي</label>
+    <input type="text" id="employeeId" name="employeeId" 
+           placeholder="الرقم الوظيفي (اختياري)">  <!-- تم التغيير من "رقم الهوية المدنية" -->
+</div>
+                    
+                    
+                   <div class="form-group">
+    <label for="department" data-i18n="department">القسم *</label>
+    <select id="department" name="department" required>
+        <option value="">اختر القسم</option>
+        <option value="الأطباء">👨‍⚕️ الأطباء</option>
+        <option value="التمريض">👩‍⚕️ التمريض</option>
+        <option value="التضميد">🩹 التضميد</option>
+        <option value="الصيدلة">💊 الصيدلة</option>
+        <option value="الأشعة">📷 الأشعة</option>
+        <option value="الأسنان">🦷 الأسنان</option>
+        <option value="المختبر">🔬 المختبر</option>
+        <option value="السجلات الطبية">📋 السجلات الطبية</option>
+        <option value="الإدارة">📊 الإدارة</option>
+        <option value="التثقيف الصحي">📚 التثقيف الصحي</option>
+        <option value="التغذية">🍎 التغذية</option>
+    </select>
+</div>
+                    </div>
+                </div>
+
+                <!-- Workshop Info -->
+                <div class="form-section">
+                    <h3><i class="fas fa-chalkboard-teacher"></i> <span data-i18n="workshop_info">معلومات الورشة</span></h3>
+                    
+                    <div class="form-group">
+                        <label for="workshopTitle" data-i18n="workshop_title">عنوان الورشة *</label>
+                        <input type="text" id="workshopTitle" name="workshopTitle" required 
+                               placeholder="مثال: أساسيات الإنعاش القلبي الرئوي">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="workshopHours" data-i18n="hours">عدد الساعات *</label>
+                            <input type="number" id="workshopHours" name="workshopHours" required 
+                                   min="6" step="0.5" placeholder="6">
+                            <small data-i18n="hours_note">يجب أن تكون مدة الورشة أكثر من 6 ساعات</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="workshopDate" data-i18n="date">تاريخ الورشة</label>
+                            <input type="date" id="workshopDate" name="workshopDate">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="organizer" data-i18n="organizer">الجهة المنظمة *</label>
+                        <input type="text" id="organizer" name="organizer" required 
+                               placeholder="مثال: وزارة الصحة - مركز التدريب">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="certificate" data-i18n="certificate">شهادة حضور</label>
+                        <select id="certificate" name="certificate">
+                            <option value="نعم">✅ نعم</option>
+                            <option value="لا" selected>❌ لا</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="form-actions">
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-save"></i> <span data-i18n="submit_workshop">تسجيل الورشة</span>
+                    </button>
+                    <button type="reset" class="btn-secondary">
+                        <i class="fas fa-undo"></i> <span data-i18n="reset_form">إعادة تعيين</span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</section>
