@@ -11,33 +11,39 @@
     <link rel="stylesheet" href="assets/css/dark-mode.css">
 </head>
 <body>
-    <!-- 🌙 Toggle & Language -->
-    <button class="dark-toggle" id="darkToggle"><i class="fas fa-moon"></i></button>
+    <!-- Dark Mode Toggle -->
+    <button class="dark-toggle" id="darkToggle" aria-label="Toggle dark mode">
+        <i class="fas fa-moon"></i>
+    </button>
+
+    <!-- Language Selector -->
     <div class="lang-selector">
         <button class="lang-btn active" data-lang="ar">🇸🇦 عربي</button>
         <button class="lang-btn" data-lang="en">🇬🇧 English</button>
     </div>
 
+    <!-- ============================================ -->
     <!-- HEADER -->
+    <!-- ============================================ -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img">
+                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img" onerror="this.style.display='none'">
                     <div>
                         <h1 class="logo-title" data-i18n="app_name">منصة مستشفى بدية للتدريب والتطوير المهني</h1>
                         <p class="logo-tagline" data-i18n="tagline">نتعلم اليوم... لنرعى أفضل غدًا</p>
                     </div>
                 </div>
                 <nav class="main-nav">
-    <a href="index.html" data-i18n="nav_home">الرئيسية</a>
-    <a href="dashboard.html" data-i18n="nav_dashboard">لوحة الشرف</a>
-    <a href="workshops.html" data-i18n="nav_workshops">سجل الورش</a>
-    <a href="register.html" data-i18n="nav_register">تسجيل ورشة</a>
-    <a href="reports.html" data-i18n="nav_reports">التقارير</a>
-    <a href="employee.html" data-i18n="nav_employee">صفحة الموظف</a>  <!-- ✅ تم الإضافة -->
-    <a href="about.html" data-i18n="nav_about">عن المطور</a>
-</nav>
+                    <a href="index.html" data-i18n="nav_home">الرئيسية</a>
+                    <a href="dashboard.html" data-i18n="nav_dashboard">لوحة الشرف</a>
+                    <a href="workshops.html" data-i18n="nav_workshops">سجل الورش</a>
+                    <a href="register.html" class="active" data-i18n="nav_register">تسجيل ورشة</a>
+                    <a href="reports.html" data-i18n="nav_reports">التقارير</a>
+                    <a href="employee.html" data-i18n="nav_employee">صفحة الموظف</a>
+                    <a href="about.html" data-i18n="nav_about">عن المطور</a>
+                </nav>
             </div>
         </div>
     </header>
@@ -54,23 +60,28 @@
 
             <div class="register-card">
                 <form id="registerForm">
-                    <!-- Employee Info -->
+                    <!-- ========================================== -->
+                    <!-- معلومات الموظف -->
+                    <!-- ========================================== -->
                     <div class="form-section">
                         <h3><i class="fas fa-user"></i> <span data-i18n="employee_info">معلومات الموظف</span></h3>
                         
-                       <div class="form-group">
-    <label for="employeeId" data-i18n="employee_id">الرقم الوظيفي *</label>
-    <input type="text" id="employeeId" name="employeeId" required 
-           placeholder="الرقم الوظيفي (مطلوب)">
-    <small>⚠️ الرقم الوظيفي هو المفتاح الرئيسي لتحديد هويتك</small>
-</div>
-                        
+                        <!-- الرقم الوظيفي (المفتاح الرئيسي) -->
                         <div class="form-group">
-                            <label for="employeeId" data-i18n="employee_id">الرقم الوظيفي</label>
-                            <input type="text" id="employeeId" name="employeeId" 
-                                   placeholder="الرقم الوظيفي (اختياري)">
+                            <label for="employeeId" data-i18n="employee_id">الرقم الوظيفي *</label>
+                            <input type="text" id="employeeId" name="employeeId" required 
+                                   placeholder="الرقم الوظيفي (مطلوب)">
+                            <small>⚠️ الرقم الوظيفي هو المفتاح الرئيسي لتحديد هويتك</small>
                         </div>
                         
+                        <!-- اسم الموظف -->
+                        <div class="form-group">
+                            <label for="employeeName" data-i18n="employee_name">اسم الموظف</label>
+                            <input type="text" id="employeeName" name="employeeName" 
+                                   placeholder="الاسم الثلاثي (اختياري)">
+                        </div>
+                        
+                        <!-- القسم -->
                         <div class="form-group">
                             <label for="department" data-i18n="department">القسم *</label>
                             <select id="department" name="department" required>
@@ -90,16 +101,20 @@
                         </div>
                     </div>
 
-                    <!-- Workshop Info -->
+                    <!-- ========================================== -->
+                    <!-- معلومات الورشة -->
+                    <!-- ========================================== -->
                     <div class="form-section">
                         <h3><i class="fas fa-chalkboard-teacher"></i> <span data-i18n="workshop_info">معلومات الورشة</span></h3>
                         
+                        <!-- عنوان الورشة -->
                         <div class="form-group">
                             <label for="workshopTitle" data-i18n="workshop_title">عنوان الورشة *</label>
                             <input type="text" id="workshopTitle" name="workshopTitle" required 
                                    placeholder="مثال: أساسيات الإنعاش القلبي الرئوي">
                         </div>
                         
+                        <!-- عدد الساعات وتاريخ الورشة -->
                         <div class="form-row">
                             <div class="form-group">
                                 <label for="workshopHours" data-i18n="hours">عدد الساعات *</label>
@@ -111,15 +126,34 @@
                             <div class="form-group">
                                 <label for="workshopDate" data-i18n="date">تاريخ الورشة</label>
                                 <input type="date" id="workshopDate" name="workshopDate">
+                                <small>تاريخ انعقاد الورشة (اختياري)</small>
                             </div>
                         </div>
                         
+                        <!-- الجهة المنظمة -->
                         <div class="form-group">
                             <label for="organizer" data-i18n="organizer">الجهة المنظمة *</label>
-                            <input type="text" id="organizer" name="organizer" required 
-                                   placeholder="مثال: وزارة الصحة - مركز التدريب">
+                            <select id="organizer" name="organizer" required>
+                                <option value="">اختر الجهة المنظمة</option>
+                                <option value="Bidiya">Bidiya</option>
+                                <option value="CDC Ibra">CDC Ibra</option>
+                                <option value="Crown Plaza Hotel">Crown Plaza Hotel</option>
+                                <option value="Golden Rays Hotel - Ibra">Golden Rays Hotel - Ibra</option>
+                                <option value="Ibra">Ibra</option>
+                                <option value="Ibra Hospital">Ibra Hospital</option>
+                                <option value="Ibra Sport Club">Ibra Sport Club</option>
+                                <option value="Ibra Training Center">Ibra Training Center</option>
+                                <option value="Intercity Hotel">Intercity Hotel</option>
+                                <option value="Intercity Hotel Muscat">Intercity Hotel Muscat</option>
+                                <option value="Malaria Department / Ibra">Malaria Department / Ibra</option>
+                                <option value="Muscat">Muscat</option>
+                                <option value="Online">Online</option>
+                                <option value="Sharqia University">Sharqia University</option>
+                                <option value="Sinaw Hospital">Sinaw Hospital</option>
+                            </select>
                         </div>
                         
+                        <!-- شهادة حضور -->
                         <div class="form-group">
                             <label for="certificate" data-i18n="certificate">شهادة حضور</label>
                             <select id="certificate" name="certificate">
@@ -129,7 +163,9 @@
                         </div>
                     </div>
 
-                    <!-- Submit -->
+                    <!-- ========================================== -->
+                    <!-- أزرار الإرسال -->
+                    <!-- ========================================== -->
                     <div class="form-actions">
                         <button type="submit" class="btn-primary">
                             <i class="fas fa-save"></i> <span data-i18n="submit_workshop">تسجيل الورشة</span>
@@ -141,12 +177,14 @@
                 </form>
             </div>
 
-            <!-- 📋 Quick Tips -->
+            <!-- ========================================== -->
+            <!-- نصائح التسجيل -->
+            <!-- ========================================== -->
             <div class="tips-section">
                 <div class="tip-card">
                     <i class="fas fa-info-circle"></i>
                     <div>
-                        <h4 data-i18n="tip_title">نصائح للتسجيل</h4>
+                        <h4 data-i18n="tip_title">📌 نصائح للتسجيل</h4>
                         <ul>
                             <li data-i18n="tip_1">📌 تأكد من إدخال جميع البيانات المطلوبة بدقة</li>
                             <li data-i18n="tip_2">⏱️ يجب أن تكون مدة الورشة أكثر من 6 ساعات</li>
@@ -159,7 +197,9 @@
         </div>
     </section>
 
+    <!-- ============================================ -->
     <!-- FOOTER -->
+    <!-- ============================================ -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -180,10 +220,10 @@
                         </div>
                     </div>
                     <div class="dev-social">
-                        <a href="#" target="_blank"><i class="fas fa-globe"></i></a>
-                        <a href="#" target="_blank"><i class="fas fa-envelope"></i></a>
-                        <a href="#" target="_blank"><i class="fab fa-whatsapp"></i></a>
-                        <a href="#" target="_blank"><i class="fab fa-twitter"></i></a>
+                        <a href="#" target="_blank" title="Website"><i class="fas fa-globe"></i></a>
+                        <a href="#" target="_blank" title="Email"><i class="fas fa-envelope"></i></a>
+                        <a href="#" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                        <a href="#" target="_blank" title="Twitter"><i class="fab fa-twitter"></i></a>
                     </div>
                 </div>
             </div>
@@ -197,6 +237,9 @@
         </div>
     </footer>
 
+    <!-- ============================================ -->
+    <!-- SCRIPTS -->
+    <!-- ============================================ -->
     <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/register.js"></script>
