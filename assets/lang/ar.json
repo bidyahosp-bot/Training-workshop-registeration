@@ -112,5 +112,11 @@
     "department_administration": "الإدارة",
     "department_health_education": "التثقيف الصحي",
     "department_nutrition": "التغذية",
-    "nav_employee": "صفحة الموظف"
+    "nav_employee": "صفحة الموظف",
+     "all_departments": "جميع الأقسام",
+    "workshops": "ورشة",
+    "employees": "موظف",
+    "no_data": "لا توجد بيانات كافية",
+    "department": "القسم",
+    "percentage": "النسبة المئوية"
 }
