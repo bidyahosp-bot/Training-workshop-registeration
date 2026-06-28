@@ -6,7 +6,42 @@ let allWorkshops = [];
 let filteredWorkshops = [];
 let currentPage = 1;
 const itemsPerPage = 20;
+const DEPT_TRANSLATIONS = {
+    ar: {
+        'الأطباء': 'الأطباء',
+        'التمريض': 'التمريض',
+        'التضميد': 'التضميد',
+        'الصيدلة': 'الصيدلة',
+        'الأشعة': 'الأشعة',
+        'الأسنان': 'الأسنان',
+        'المختبر': 'المختبر',
+        'السجلات الطبية': 'السجلات الطبية',
+        'الإدارة': 'الإدارة',
+        'التثقيف الصحي': 'التثقيف الصحي',
+        'التغذية': 'التغذية'
+    },
+    en: {
+        'الأطباء': 'Doctors',
+        'التمريض': 'Nursing',
+        'التضميد': 'Dressing',
+        'الصيدلة': 'Pharmacy',
+        'الأشعة': 'Radiology',
+        'الأسنان': 'Dentistry',
+        'المختبر': 'Laboratory',
+        'السجلات الطبية': 'Medical Records',
+        'الإدارة': 'Administration',
+        'التثقيف الصحي': 'Health Education',
+        'التغذية': 'Nutrition'
+    }
+};
 
+function translateDepartment(deptName) {
+    const lang = currentLang || 'ar';
+    if (DEPT_TRANSLATIONS[lang] && DEPT_TRANSLATIONS[lang][deptName]) {
+        return DEPT_TRANSLATIONS[lang][deptName];
+    }
+    return deptName;
+}
 // Load workshops data
 async function loadWorkshops() {
     try {
@@ -68,7 +103,7 @@ function populateFilters(workshops) {
         try { return new Date(w.date).getFullYear(); } catch { return null; }
     }).filter(Boolean))];
     
-    // تعبئة فلتر الأقسام
+    // تعبئة فلتر الأقسام مع ترجمة
     const deptSelect = document.getElementById('filterDepartment');
     if (deptSelect) {
         const allOption = deptSelect.querySelector('option[value="all"]');
@@ -78,7 +113,7 @@ function populateFilters(workshops) {
         } else {
             const option = document.createElement('option');
             option.value = 'all';
-            option.textContent = 'جميع الأقسام';
+            option.textContent = t('all_departments') || 'جميع الأقسام';
             deptSelect.appendChild(option);
         }
         
@@ -96,11 +131,13 @@ function populateFilters(workshops) {
             'التغذية': '🍎'
         };
         
-        departments.sort().forEach(dept => {
+        departments.sort().forEach(function(dept) {
             const option = document.createElement('option');
             option.value = dept;
             const icon = deptIcons[dept] || '🏢';
-            option.textContent = icon + ' ' + dept;
+            // ✅ استخدام الترجمة
+            const translatedName = translateDepartment(dept);
+            option.textContent = icon + ' ' + translatedName;
             deptSelect.appendChild(option);
         });
     }
