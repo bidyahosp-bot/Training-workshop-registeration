@@ -15,26 +15,23 @@ async function loadEmployeeData() {
         console.log('📡 رد الخادم:', result);
         
         if (result.status === 'success' && result.data) {
-            // ✅ استخدام allEmployees إذا كان موجوداً، وإلا استخدم topEmployees
             allEmployees = result.data.allEmployees || result.data.topEmployees || [];
             allWorkshops = result.data.recentWorkshops || [];
             
             console.log('✅ عدد الموظفين:', allEmployees.length);
             console.log('✅ عدد الورش:', allWorkshops.length);
             
-            // ✅ التحقق من وجود بيانات قبل العرض
             if (allEmployees.length > 0) {
                 renderEmployeeList(allEmployees);
             } else {
                 showEmployeeError('لا توجد بيانات موظفين لعرضها');
             }
         } else {
-            console.warn('⚠️ خطأ في البيانات:', result);
-            showEmployeeError('حدث خطأ في تحميل بيانات الموظفين: ' + (result.message || 'خطأ غير معروف'));
+            showEmployeeError('حدث خطأ في تحميل البيانات');
         }
     } catch (error) {
-        console.error('❌ خطأ في التحميل:', error);
-        showEmployeeError('حدث خطأ في الاتصال بالخادم. تحقق من الرابط.');
+        console.error('❌ خطأ:', error);
+        showEmployeeError('حدث خطأ في الاتصال بالخادم');
     }
 }
 
@@ -54,66 +51,44 @@ function showEmployeeError(message) {
     }
 }
 
-// ✅ عرض قائمة الموظفين (مصححة)
+// ✅ عرض قائمة الموظفين
 function renderEmployeeList(employees) {
     const container = document.getElementById('employeeList');
-    if (!container) {
-        console.warn('⚠️ عنصر employeeList غير موجود');
-        return;
-    }
+    if (!container) return;
     
-    // ✅ التحقق من صحة البيانات
     if (!employees || !Array.isArray(employees) || employees.length === 0) {
         container.innerHTML = '<p class="no-data">لا توجد بيانات موظفين</p>';
         return;
     }
     
-    console.log('📋 عرض قائمة الموظفين، العدد:', employees.length);
-    
-    const deptIcons = {
-        'الأطباء': '👨‍⚕️', 'التمريض': '👩‍⚕️', 'التضميد': '🩹',
-        'الصيدلة': '💊', 'الأشعة': '📷', 'الأسنان': '🦷',
-        'المختبر': '🔬', 'السجلات الطبية': '📋', 'الإدارة': '📊',
-        'التثقيف الصحي': '📚', 'التغذية': '🍎'
-    };
-    
-    // ✅ استخدام slice(0, 50) لعرض أول 50 موظف فقط (لتجنب التكرار)
+    // عرض أول 50 موظف فقط
     const displayEmployees = employees.slice(0, 50);
     
     container.innerHTML = displayEmployees.map(function(emp, index) {
-        // ✅ التحقق من وجود بيانات الموظف
-        if (!emp) return '';
-        
-        const employeeId = emp.employeeId || 'غير محدد';
-        const name = emp.name || employeeId;
-        const department = emp.department || 'قسم غير محدد';
-        const workshops = emp.workshops || 0;
-        const totalHours = emp.totalHours || 0;
-        
-        const badge = getBadge(workshops);
-        const icon = deptIcons[department] || '🏢';
+        const badge = getBadge(emp.workshops || 0);
+        const dept = emp.department || 'قسم غير محدد';
         
         return `
-            <div class="employee-card" data-id="${employeeId}">
+            <div class="employee-card" data-id="${emp.employeeId}">
                 <div class="emp-rank">#${index + 1}</div>
                 <div class="emp-avatar"><i class="fas fa-user-circle"></i></div>
                 <div class="emp-info">
-                    <div class="emp-name">${name}</div>
-                    <div class="emp-id">🆔 ${employeeId}</div>
-                    <div class="emp-dept">${icon} ${department}</div>
+                    <div class="emp-name">${emp.name || emp.employeeId}</div>
+                    <div class="emp-id">🆔 ${emp.employeeId}</div>
+                    <div class="emp-dept">${dept}</div>
                 </div>
                 <div class="emp-stats">
-                    <span>📚 ${workshops}</span>
+                    <span>📚 ${emp.workshops || 0}</span>
                     <span class="emp-badge">${badge.emoji}</span>
                 </div>
-                <button class="emp-view-btn" data-id="${employeeId}">
+                <button class="emp-view-btn" data-id="${emp.employeeId}">
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
         `;
     }).join('');
     
-    // ✅ إضافة أحداث النقر
+    // إضافة أحداث النقر
     container.querySelectorAll('.emp-view-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
             const id = this.dataset.id;
@@ -132,69 +107,63 @@ function renderEmployeeList(employees) {
     });
 }
 
-// ✅ عرض ملف الموظف الشخصي (مصحح)
+// ✅ عرض الملف الشخصي (مبسط ومنظم)
 function viewEmployeeProfile(id) {
     if (!id) {
         alert('⚠️ يرجى إدخال رقم وظيفي أو اسم موظف');
         return;
     }
     
-    console.log('🔍 البحث عن الموظف:', id);
-    
     // البحث بالرقم الوظيفي
-    let employee = allEmployees.find(function(e) { 
-        return e.employeeId === id; 
-    });
+    let employee = allEmployees.find(function(e) { return e.employeeId === id; });
     
     // إذا لم يتم العثور، حاول البحث بالاسم
     if (!employee) {
-        employee = allEmployees.find(function(e) { 
-            return e.name === id; 
-        });
+        employee = allEmployees.find(function(e) { return e.name === id; });
         if (employee) {
             document.getElementById('employeeSearch').value = employee.employeeId;
-            id = employee.employeeId;
         }
     }
     
     if (!employee) {
-        alert('⚠️ لم يتم العثور على موظف بالرقم الوظيفي أو الاسم: "' + id + '"');
+        alert('⚠️ لم يتم العثور على موظف: "' + id + '"');
         return;
     }
     
-    console.log('✅ تم العثور على الموظف:', employee);
-    
+    // إظهار الملف الشخصي
     const profile = document.getElementById('employeeProfile');
     if (profile) profile.style.display = 'block';
     
-    // ✅ تحديث معلومات الملف الشخصي
+    // ✅ تحديث المعلومات بشكل منظم
     const name = employee.name || employee.employeeId;
-    document.getElementById('profileName').textContent = name;
-    document.getElementById('profileEmployeeId').textContent = employee.employeeId;
-    document.getElementById('profileDepartment').textContent = employee.department || 'قسم غير محدد';
+    const empId = employee.employeeId;
+    const dept = employee.department || 'قسم غير محدد';
+    const workshops = employee.workshops || 0;
+    const hours = employee.totalHours || 0;
+    const rank = allEmployees.findIndex(function(e) { return e.employeeId === empId; }) + 1;
+    const badge = getBadge(workshops);
     
-    const badge = getBadge(employee.workshops || 0);
+    // تحديث العناصر
+    document.getElementById('profileName').textContent = name;
+    document.getElementById('profileEmployeeId').textContent = empId;
+    document.getElementById('profileDepartment').textContent = dept;
+    
     const badgeEl = document.getElementById('profileBadge');
     if (badgeEl) {
         badgeEl.innerHTML = badge.emoji + ' ' + badge.name;
         badgeEl.style.color = badge.color;
     }
     
-    document.getElementById('profileWorkshops').textContent = employee.workshops || 0;
-    document.getElementById('profileHours').textContent = employee.totalHours || 0;
-    
-    // ✅ حساب الترتيب
-    const rank = allEmployees.findIndex(function(e) { 
-        return e.employeeId === employee.employeeId; 
-    }) + 1;
+    document.getElementById('profileWorkshops').textContent = workshops;
+    document.getElementById('profileHours').textContent = hours;
     document.getElementById('profileRank').textContent = '#' + (rank > 0 ? rank : 'N/A');
     
-    // ✅ تحديث التقدم والإنجازات
-    updateProgress(employee.workshops || 0);
-    renderEmployeeWorkshops(employee.employeeId);
-    renderAchievements(employee.workshops || 0);
+    // تحديث التقدم
+    updateProgress(workshops);
+    renderEmployeeWorkshops(empId);
+    renderAchievements(workshops);
     
-    // ✅ التمرير إلى الملف الشخصي
+    // التمرير إلى الملف الشخصي
     if (profile) {
         setTimeout(function() {
             profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -207,11 +176,7 @@ function renderEmployeeWorkshops(id) {
     const tbody = document.getElementById('profileWorkshopsBody');
     if (!tbody) return;
     
-    const workshops = allWorkshops.filter(function(w) { 
-        return w.employeeId === id; 
-    });
-    
-    console.log('📚 عدد ورش الموظف:', workshops.length);
+    const workshops = allWorkshops.filter(function(w) { return w.employeeId === id; });
     
     if (!workshops || workshops.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-row">لا توجد ورش مسجلة</td></tr>';
@@ -310,5 +275,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ✅ دالة مساعدة لتصحيح الأخطاء
-console.log('✅ employee.js تم تحميله بنجاح');
+console.log('✅ employee.js تم تحميله');
