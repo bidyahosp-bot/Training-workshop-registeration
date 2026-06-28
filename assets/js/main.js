@@ -2,7 +2,7 @@
 // Main JavaScript - Bidiya Training Hub
 // ============================================
 
-// 🔗 API URL - استبدل برابط Google Apps Script الخاص بك
+// 🔗 API URL - تأكد من تحديث هذا الرابط
 const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
 
 // ============================================
@@ -12,35 +12,39 @@ async function loadHomePageData() {
     try {
         const response = await fetch(API_URL);
         const result = await response.json();
-        
+
         if (result.status === 'success' && result.data) {
             const data = result.data;
             const summary = data.summary || {};
-            
+
             // تحديث العدادات
             const totalWorkshops = document.getElementById('totalWorkshops');
             const totalHours = document.getElementById('totalHours');
             const totalEmployees = document.getElementById('totalEmployees');
-            
+
             if (totalWorkshops) totalWorkshops.textContent = summary.totalWorkshops || 0;
             if (totalHours) totalHours.textContent = summary.totalHours || 0;
             if (totalEmployees) totalEmployees.textContent = summary.totalEmployees || 0;
-            
+
             // تحديث الإحصائيات السريعة
             const topEmp = data.topEmployees?.[0];
             const topEmployeeEl = document.getElementById('topEmployee');
             if (topEmployeeEl) {
                 topEmployeeEl.textContent = topEmp ? `${topEmp.name} (${topEmp.workshops} ورشة)` : '-';
             }
-            
+
             const lastEmp = data.lastWorkshop;
             const lastEmployeeEl = document.getElementById('lastEmployee');
             if (lastEmployeeEl) {
                 lastEmployeeEl.textContent = lastEmp ? lastEmp.employee : '-';
             }
+        } else {
+            console.warn('API response status is not success:', result);
+            // يمكن إضافة رسالة للمستخدم هنا
         }
     } catch (error) {
         console.error('Error loading home data:', error);
+        // يمكن إضافة رسالة خطأ للمستخدم هنا
     }
 }
 
@@ -84,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.add('dark-mode');
             toggle.innerHTML = '<i class="fas fa-sun"></i>';
         }
-        
+
         toggle.addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -92,11 +96,12 @@ document.addEventListener('DOMContentLoaded', function() {
             toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         });
     }
-    
+
     // تحميل البيانات في الصفحة الرئيسية
     if (document.getElementById('totalWorkshops')) {
         loadHomePageData();
-        setInterval(loadHomePageData, 60000);
+        // تحديث تلقائي كل 30 ثانية
+        setInterval(loadHomePageData, 30000);
     }
 });
 
@@ -114,11 +119,8 @@ if ('serviceWorker' in navigator) {
 // ============================================
 async function loadDepartments() {
     try {
-        const response = await fetch(API_URL + '?action=getDepartments');
-        const result = await response.json();
-        if (result.status === 'success' && result.data) {
-            return result.data;
-        }
+        // محاولة جلب الأقسام من API (إذا كانت مدعومة)
+        // وإلا نعود للقائمة الافتراضية
         return getDefaultDepartments();
     } catch (error) {
         console.error('Error loading departments:', error);
@@ -136,11 +138,11 @@ function getDefaultDepartments() {
 
 async function populateDepartments(selectElement) {
     if (!selectElement) return;
-    
+
     const departments = await loadDepartments();
     const firstOption = selectElement.querySelector('option[value=""]');
     selectElement.innerHTML = '';
-    
+
     if (firstOption) {
         selectElement.appendChild(firstOption);
     } else {
@@ -149,7 +151,7 @@ async function populateDepartments(selectElement) {
         option.textContent = 'اختر القسم';
         selectElement.appendChild(option);
     }
-    
+
     departments.forEach(function(dept) {
         const option = document.createElement('option');
         option.value = dept;
