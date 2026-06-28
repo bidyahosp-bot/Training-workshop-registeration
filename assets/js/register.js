@@ -1,5 +1,6 @@
 // ============================================
 // Register JavaScript - Bidiya Training Hub
+// الرقم الوظيفي مفتاح رئيسي
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -44,9 +45,16 @@ document.addEventListener('DOMContentLoaded', async function() {
                 data[key] = value;
             });
             
+            // ✅ التحقق من الرقم الوظيفي
+            if (!data['employeeId'] || data['employeeId'].trim() === '') {
+                alert('⚠️ الرقم الوظيفي مطلوب. يرجى إدخال رقمك الوظيفي.');
+                document.getElementById('employeeId').focus();
+                return;
+            }
+            
             const workshopData = {
+                employeeId: data['employeeId'].trim(),
                 employeeName: data['employeeName'] || '',
-                employeeId: data['employeeId'] || '',
                 department: data['department'] || '',
                 workshopTitle: data['workshopTitle'] || '',
                 hours: parseFloat(data['workshopHours']) || 0,
@@ -59,8 +67,7 @@ document.addEventListener('DOMContentLoaded', async function() {
                 return;
             }
             
-            if (!workshopData.employeeName || !workshopData.department || 
-                !workshopData.workshopTitle || !workshopData.organizer) {
+            if (!workshopData.department || !workshopData.workshopTitle || !workshopData.organizer) {
                 alert('⚠️ يرجى تعبئة جميع الحقول المطلوبة');
                 return;
             }
@@ -80,7 +87,9 @@ document.addEventListener('DOMContentLoaded', async function() {
                 const result = await response.json();
                 
                 if (result.status === 'success') {
-                    alert('✅ تم تسجيل الورشة بنجاح!\n📚 ' + workshopData.workshopTitle + '\n👤 ' + workshopData.employeeName);
+                    alert('✅ تم تسجيل الورشة بنجاح!\n' +
+                          '📚 ' + workshopData.workshopTitle + '\n' +
+                          '👤 ' + workshopData.employeeId + ' - ' + workshopData.employeeName);
                     form.reset();
                     if (dateInput) dateInput.value = today;
                     if (typeof loadHomePageData === 'function') {
