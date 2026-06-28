@@ -58,27 +58,27 @@ function renderTopEmployees(employees) {
         return;
     }
 
-    container.innerHTML = employees.map((emp, index) => {
-        const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
-        const rankClass = index === 0 ? 'first' : index === 1 ? 'second' : 'third';
-        const badge = getBadge(emp.workshops);
-
-        return `
-            <div class="podium-item ${rankClass}">
-                <div class="podium-rank">${medal}</div>
-                <div class="podium-name">${emp.name}</div>
-                <div class="podium-id">${emp.employeeId || '-'}</div>
-                <div class="podium-badge" style="background: ${badge.color}20; color: ${badge.color};">
-                    ${badge.emoji} ${badge.name}
-                </div>
-                <div class="podium-stats">
-                    <span>📚 ${emp.workshops} ورشة</span>
-                    <span>⏱️ ${emp.totalHours || 0} ساعة</span>
-                </div>
-                <div class="podium-department">${emp.department || 'قسم غير محدد'}</div>
+    // في دالة renderTopEmployees
+container.innerHTML = employees.map(function(emp, index) {
+    const medal = index === 0 ? '🥇' : index === 1 ? '🥈' : '🥉';
+    const rankClass = index === 0 ? 'first' : index === 1 ? 'second' : 'third';
+    const badge = getBadge(emp.workshops);
+    return `
+        <div class="podium-item ${rankClass}">
+            <div class="podium-rank">${medal}</div>
+            <div class="podium-name">${emp.name}</div>
+            <div class="podium-id">🆔 ${emp.employeeId}</div>
+            <div class="podium-badge" style="background: ${badge.color}20; color: ${badge.color};">
+                ${badge.emoji} ${badge.name}
             </div>
-        `;
-    }).join('');
+            <div class="podium-stats">
+                <span>📚 ${emp.workshops} ورشة</span>
+                <span>⏱️ ${emp.totalHours || 0} ساعة</span>
+            </div>
+            <div class="podium-department">${emp.department || 'قسم غير محدد'}</div>
+        </div>
+    `;
+}).join('');
 }
 
 // 🏢 Render Top Departments
