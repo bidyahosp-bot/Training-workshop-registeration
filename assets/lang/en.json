@@ -111,5 +111,6 @@
     "department_medical_records": "Medical Records",
     "department_administration": "Administration",
     "department_health_education": "Health Education",
-    "department_nutrition": "Nutrition"
+    "department_nutrition": "Nutrition",
+    "nav_employee": "Employee Profile"
 }
