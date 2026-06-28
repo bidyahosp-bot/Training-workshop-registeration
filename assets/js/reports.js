@@ -5,16 +5,18 @@
 let reportData = {};
 let charts = {};
 
-// Load report data
+// ============================================
+// تحميل بيانات التقارير
+// ============================================
 async function loadReportData() {
     try {
+        console.log('📡 جاري تحميل بيانات التقارير...');
         const response = await fetch(API_URL);
         const result = await response.json();
 
         if (result.status === 'success' && result.data) {
             reportData = result.data;
             
-            // التحقق من وجود بيانات
             const hasData = reportData.recentWorkshops && reportData.recentWorkshops.length > 0;
             
             if (hasData) {
@@ -25,14 +27,19 @@ async function loadReportData() {
             
             renderEmployeeReport(reportData.allEmployees || reportData.topEmployees || []);
             renderDepartmentReport(reportData.topDepartments || []);
+        } else {
+            console.warn('⚠️ خطأ في البيانات:', result);
+            showErrorMessage('حدث خطأ في تحميل البيانات');
         }
     } catch (error) {
-        console.error('Error loading report data:', error);
-        showErrorMessage();
+        console.error('❌ خطأ:', error);
+        showErrorMessage('حدث خطأ في الاتصال بالخادم');
     }
 }
 
-// عرض رسالة عدم وجود بيانات
+// ============================================
+// عرض رسائل
+// ============================================
 function showNoDataMessage() {
     const container = document.querySelector('.charts-grid');
     if (container) {
@@ -48,23 +55,26 @@ function showNoDataMessage() {
     }
 }
 
-function showErrorMessage() {
+function showErrorMessage(message) {
     const container = document.querySelector('.charts-grid');
     if (container) {
         container.innerHTML = `
             <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
                 <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
-                <p style="margin-top: 15px; color: var(--text-secondary);">
-                    حدث خطأ في تحميل البيانات. يرجى المحاولة لاحقاً.
-                </p>
+                <p style="margin-top: 15px; color: var(--text-secondary);">${message}</p>
+                <button onclick="loadReportData()" class="btn-primary" style="margin-top:15px;">
+                    <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                </button>
             </div>
         `;
     }
 }
 
-// Render all charts
+// ============================================
+// عرض الرسوم البيانية
+// ============================================
 function renderCharts(data) {
-    // 1. Monthly Workshops Chart
+    // 1. Monthly Workshops Chart - ✅ استخدام تاريخ الورشة
     const monthlyCanvas = document.getElementById('monthlyChart');
     if (!monthlyCanvas) return;
     
@@ -72,12 +82,19 @@ function renderCharts(data) {
                     'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
     const monthlyData = Array(12).fill(0);
     
-    if (data.recentWorkshops) {
-        data.recentWorkshops.forEach(function(w) {
+    if (data.allWorkshops) {
+        data.allWorkshops.forEach(function(w) {
             try {
-                const month = new Date(w.date).getMonth();
-                monthlyData[month] = (monthlyData[month] || 0) + 1;
-            } catch {}
+                // ✅ استخدام workshopDate إذا كان موجوداً، وإلا استخدم date
+                var dateToUse = w.workshopDate || w.date;
+                var date = new Date(dateToUse);
+                if (!isNaN(date.getTime())) {
+                    var month = date.getMonth();
+                    monthlyData[month] = (monthlyData[month] || 0) + 1;
+                }
+            } catch (e) {
+                console.warn('⚠️ خطأ في تاريخ الورشة:', w);
+            }
         });
     }
     
@@ -180,8 +197,8 @@ function renderCharts(data) {
     if (!orgCanvas) return;
     
     const organizers = {};
-    if (data.recentWorkshops) {
-        data.recentWorkshops.forEach(function(w) {
+    if (data.allWorkshops) {
+        data.allWorkshops.forEach(function(w) {
             const org = w.organizer || 'غير محدد';
             organizers[org] = (organizers[org] || 0) + 1;
         });
@@ -215,8 +232,8 @@ function renderCharts(data) {
     const certCanvas = document.getElementById('certificateChart');
     if (!certCanvas) return;
     
-    const hasCert = data.recentWorkshops ? data.recentWorkshops.filter(function(w) { return w.certificate === 'نعم'; }).length : 0;
-    const noCert = data.recentWorkshops ? data.recentWorkshops.filter(function(w) { return w.certificate === 'لا'; }).length : 0;
+    const hasCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'نعم'; }).length : 0;
+    const noCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'لا'; }).length : 0;
     
     charts.certificate = new Chart(certCanvas.getContext('2d'), {
         type: 'doughnut',
@@ -241,13 +258,15 @@ function renderCharts(data) {
     });
 }
 
-// Render Employee Report Table
+// ============================================
+// عرض تقرير الموظفين
+// ============================================
 function renderEmployeeReport(employees) {
     const tbody = document.getElementById('employeeReportBody');
     if (!tbody) return;
     
     if (!employees || !employees.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-row">لا توجد بيانات</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">لا توجد بيانات</td></tr>';
         return;
     }
 
@@ -272,13 +291,15 @@ function renderEmployeeReport(employees) {
     }).join('');
 }
 
-// Render Department Report Table
+// ============================================
+// عرض تقرير الأقسام
+// ============================================
 function renderDepartmentReport(departments) {
     const tbody = document.getElementById('departmentReportBody');
     if (!tbody) return;
     
     if (!departments || !departments.length) {
-        tbody.innerHTML = `<tr><td colspan="7" class="empty-row">لا توجد بيانات</td></tr>`;
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">لا توجد بيانات</td></tr>';
         return;
     }
 
@@ -306,7 +327,9 @@ function renderDepartmentReport(departments) {
     }).join('');
 }
 
-// Generate Certificate
+// ============================================
+// إنشاء شهادة
+// ============================================
 function generateCertificate(employee, period) {
     const badge = getBadge(employee.workshops);
     return `
@@ -331,7 +354,9 @@ function generateCertificate(employee, period) {
     `;
 }
 
-// Event Listeners
+// ============================================
+// أحداث الصفحة
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     loadReportData();
 
@@ -379,193 +404,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// ============================================
-// إضافة الأنماط ديناميكياً (للملفات التي لا تحتوي عليها)
-// ============================================
-(function addStyles() {
-    if (document.getElementById('reports-styles')) return;
-    
-    const style = document.createElement('style');
-    style.id = 'reports-styles';
-    style.textContent = `
-        .certificate-preview {
-            display: none;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
-            margin-top: 20px;
-        }
-        .certificate-card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            border: 2px solid #ffd700;
-            transition: transform 0.3s;
-        }
-        .certificate-card:hover {
-            transform: translateY(-5px);
-        }
-        .certificate-card .cert-logo {
-            height: 50px;
-            margin-bottom: 10px;
-        }
-        .certificate-card .cert-badge {
-            font-size: 2rem;
-            margin: 10px 0;
-        }
-        .certificate-card .cert-period {
-            font-size: 0.9rem;
-            color: #666;
-            margin-top: 10px;
-        }
-        .certificate-card .certificate-footer {
-            margin-top: 20px;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-            font-size: 0.85rem;
-            color: #666;
-        }
-        .badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
-        .progress-bar {
-            position: relative;
-            width: 100%;
-            height: 20px;
-            background: #f0f0f0;
-            border-radius: 10px;
-            overflow: hidden;
-        }
-        .progress-fill {
-            height: 100%;
-            border-radius: 10px;
-            transition: width 0.5s ease;
-        }
-        .progress-bar span {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 0.7rem;
-            font-weight: 600;
-            color: #333;
-        }
-        .report-filters {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: end;
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            margin-bottom: 30px;
-        }
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            gap: 5px;
-        }
-        .filter-group label {
-            font-weight: 600;
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-        }
-        .filter-group select {
-            padding: 8px 15px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-family: var(--font);
-            background: var(--bg-main);
-            color: var(--text-primary);
-            min-width: 150px;
-        }
-        .charts-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 25px;
-            margin-bottom: 40px;
-        }
-        .chart-card {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-        .chart-card.full-width {
-            grid-column: 1 / -1;
-        }
-        .chart-card h3 {
-            margin-bottom: 15px;
-            font-size: 1rem;
-            color: var(--text-secondary);
-        }
-        .chart-card canvas {
-            max-height: 300px;
-        }
-        .report-tables {
-            display: grid;
-            gap: 30px;
-            margin-top: 30px;
-        }
-        .report-section {
-            background: var(--bg-card);
-            padding: 20px;
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-        .report-section h2 {
-            margin-bottom: 20px;
-            font-size: 1.2rem;
-        }
-        .report-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9rem;
-        }
-        .report-table th {
-            background: var(--primary);
-            color: white;
-            padding: 10px 15px;
-            text-align: right;
-        }
-        .report-table td {
-            padding: 8px 15px;
-            border-bottom: 1px solid var(--bg-main);
-        }
-        .report-table tr:hover td {
-            background: var(--primary-light);
-        }
-        .certificate-section {
-            margin-top: 40px;
-            padding: 30px;
-            background: var(--bg-card);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-        }
-        .certificate-controls {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            margin: 15px 0;
-        }
-        .certificate-controls select {
-            padding: 8px 15px;
-            border: 1px solid #ddd;
-            border-radius: 10px;
-            font-family: var(--font);
-        }
-        @media (max-width: 768px) {
-            .charts-grid { grid-template-columns: 1fr; }
-            .report-filters { flex-direction: column; }
-            .filter-group select { width: 100%; }
-            .certificate-controls { flex-direction: column; }
-        }
-    `;
-    document.head.appendChild(style);
-})();
+console.log('✅ reports.js تم تحميله بنجاح');
