@@ -1675,3 +1675,173 @@ body.dark-mode .contact-item:hover {
         margin-top: 10px;
     }
 }
+/* ============================================
+   Employee Page Styles
+   ============================================ */
+
+.employee-profile {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 30px;
+    margin-bottom: 30px;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+    flex-wrap: wrap;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--bg-main);
+}
+
+.profile-avatar {
+    font-size: 4rem;
+    color: var(--primary);
+}
+
+.profile-info {
+    flex: 1;
+}
+
+.profile-info h2 {
+    font-size: 1.8rem;
+    margin: 0;
+}
+
+.profile-info p {
+    color: var(--text-secondary);
+    margin: 5px 0;
+}
+
+.profile-badge {
+    font-size: 1.2rem;
+    font-weight: 700;
+}
+
+.profile-stats {
+    display: flex;
+    gap: 20px;
+}
+
+.profile-stats .stat {
+    text-align: center;
+    padding: 10px 20px;
+    background: var(--bg-main);
+    border-radius: 12px;
+    min-width: 70px;
+}
+
+.stat-number {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.stat-label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+/* Employee List */
+.employee-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 15px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.employee-card {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.employee-card:hover {
+    transform: translateX(-5px);
+    border-color: var(--primary);
+}
+
+.emp-rank {
+    font-weight: 800;
+    font-size: 1.1rem;
+    color: var(--primary);
+    min-width: 35px;
+}
+
+.emp-avatar {
+    font-size: 1.8rem;
+    color: var(--primary);
+}
+
+.emp-info {
+    flex: 1;
+}
+
+.emp-name {
+    font-weight: 600;
+}
+
+.emp-id {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.emp-dept {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.emp-stats {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.emp-badge {
+    font-size: 1.3rem;
+}
+
+.emp-view-btn {
+    padding: 6px 12px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+@media (max-width: 768px) {
+    .profile-header {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .profile-stats {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+    
+    .employee-search {
+        flex-direction: column;
+    }
+    
+    .employee-card {
+        flex-wrap: wrap;
+    }
+    
+    .emp-view-btn {
+        width: 100%;
+        margin-top: 10px;
+    }
+}
