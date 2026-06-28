@@ -1,6 +1,42 @@
 // ============================================
 // Dashboard JavaScript - Bidiya Training Hub
 // ============================================
+const DEPT_TRANSLATIONS = {
+    ar: {
+        'الأطباء': 'الأطباء',
+        'التمريض': 'التمريض',
+        'التضميد': 'التضميد',
+        'الصيدلة': 'الصيدلة',
+        'الأشعة': 'الأشعة',
+        'الأسنان': 'الأسنان',
+        'المختبر': 'المختبر',
+        'السجلات الطبية': 'السجلات الطبية',
+        'الإدارة': 'الإدارة',
+        'التثقيف الصحي': 'التثقيف الصحي',
+        'التغذية': 'التغذية'
+    },
+    en: {
+        'الأطباء': 'Doctors',
+        'التمريض': 'Nursing',
+        'التضميد': 'Dressing',
+        'الصيدلة': 'Pharmacy',
+        'الأشعة': 'Radiology',
+        'الأسنان': 'Dentistry',
+        'المختبر': 'Laboratory',
+        'السجلات الطبية': 'Medical Records',
+        'الإدارة': 'Administration',
+        'التثقيف الصحي': 'Health Education',
+        'التغذية': 'Nutrition'
+    }
+};
+// ✅ دالة ترجمة القسم
+function translateDepartment(deptName) {
+    const lang = currentLang || 'ar';
+    if (DEPT_TRANSLATIONS[lang] && DEPT_TRANSLATIONS[lang][deptName]) {
+        return DEPT_TRANSLATIONS[lang][deptName];
+    }
+    return deptName;
+}
 
 // Load dashboard data
 async function loadDashboardData() {
@@ -87,7 +123,7 @@ function renderTopDepartments(departments) {
     if (!container) return;
     
     if (!departments || !departments.length) {
-        container.innerHTML = '<p class="no-data">لا توجد بيانات كافية</p>';
+        container.innerHTML = '<p class="no-data">' + t('no_data') + '</p>';
         return;
     }
     
@@ -105,28 +141,33 @@ function renderTopDepartments(departments) {
         'التغذية': '🍎'
     };
     
-    container.innerHTML = departments.map((dept, index) => {
+    const maxWorkshops = departments[0]?.workshops || 1;
+    
+    container.innerHTML = departments.map(function(dept, index) {
         const icon = deptIcons[dept.name] || '🏢';
-        const maxWorkshops = departments[0]?.workshops || 1;
+        // ✅ استخدام دالة الترجمة
+        const translatedName = translateDepartment(dept.name);
         const width = Math.min((dept.workshops / maxWorkshops) * 100, 100);
         
         return `
             <div class="dept-item">
                 <div class="dept-rank">#${index + 1}</div>
                 <div class="dept-info">
-                    <div class="dept-name">${icon} ${dept.name}</div>
+                    <div class="dept-name">${icon} ${translatedName}</div>
                     <div class="dept-stats">
-                        <span>📚 ${dept.workshops} ورشة</span>
-                        <span>👥 ${dept.employees} موظف</span>
-                        <span>⏱️ ${dept.totalHours || 0} ساعة</span>
+                        <span>📚 ${dept.workshops} ${t('workshops')}</span>
+                        <span>👥 ${dept.employees} ${t('employees')}</span>
+                        <span>⏱️ ${dept.totalHours || 0} ${t('hours')}</span>
                     </div>
                 </div>
                 <div class="dept-progress">
                     <div class="dept-bar" style="width: ${width}%"></div>
+                    <span class="dept-percent">${Math.round(width)}%</span>
                 </div>
             </div>
         `;
     }).join('');
+}
 }
 
 // ⚡ Render Fastest Employee
