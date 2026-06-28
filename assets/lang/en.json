@@ -112,5 +112,11 @@
     "department_administration": "Administration",
     "department_health_education": "Health Education",
     "department_nutrition": "Nutrition",
-    "nav_employee": "Employee Profile"
+    "nav_employee": "Employee Profile",
+    "all_departments": "All Departments",
+    "workshops": "Workshops",
+    "employees": "Employees",
+    "no_data": "No data available",
+    "department": "Department",
+    "percentage": "Percentage"
 }
