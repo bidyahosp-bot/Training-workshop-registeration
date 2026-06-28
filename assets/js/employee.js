@@ -16,9 +16,10 @@ async function loadEmployeeData() {
         
         if (result.status === 'success' && result.data) {
             allEmployees = result.data.allEmployees || result.data.topEmployees || [];
-            allWorkshops = result.data.recentWorkshops || [];
+            allWorkshops = result.data.allWorkshops || result.data.recentWorkshops || [];
             
             console.log('✅ عدد الموظفين:', allEmployees.length);
+            console.log('✅ عدد الورش الكلي:', allWorkshops.length);
             
             if (allEmployees.length > 0) {
                 renderEmployeeList(allEmployees);
@@ -73,7 +74,6 @@ function renderEmployeeList(employees) {
         'التثقيف الصحي': '📚', 'التغذية': '🍎'
     };
     
-    // عرض أول 50 موظف فقط
     const displayList = employees.slice(0, 50);
     
     container.innerHTML = displayList.map(function(emp, index) {
@@ -83,7 +83,6 @@ function renderEmployeeList(employees) {
         const name = emp.name || id;
         const dept = emp.department || 'قسم غير محدد';
         const workshops = emp.workshops || 0;
-        const hours = emp.totalHours || 0;
         const badge = getBadge(workshops);
         const icon = deptIcons[dept] || '🏢';
         
@@ -156,6 +155,8 @@ function viewEmployeeProfile(id) {
         return;
     }
     
+    console.log('✅ عرض الملف الشخصي للموظف:', employee.employeeId);
+    
     // إظهار الملف الشخصي
     const profile = document.getElementById('employeeProfile');
     if (profile) profile.style.display = 'block';
@@ -185,11 +186,11 @@ function viewEmployeeProfile(id) {
     // التقدم
     updateProgress(employee.workshops || 0);
     
-    // سجل الورش
+    // ✅ عرض سجل الورش (مصحح)
     renderEmployeeWorkshops(employee.employeeId);
     
-    // الإنجازات
-    renderAchievements(employee.workshops || 0);
+    // ✅ عرض الإنجازات (تصميم أفقي جديد)
+    renderAchievementsHorizontal(employee.workshops || 0);
     
     // التمرير
     if (profile) {
@@ -200,57 +201,74 @@ function viewEmployeeProfile(id) {
 }
 
 // ============================================
-// عرض سجل الورش
+// عرض سجل الورش (مصحح)
 // ============================================
 function renderEmployeeWorkshops(id) {
     const tbody = document.getElementById('profileWorkshopsBody');
-    if (!tbody) return;
+    if (!tbody) {
+        console.warn('⚠️ عنصر profileWorkshopsBody غير موجود');
+        return;
+    }
     
+    console.log('🔍 البحث عن ورش للموظف:', id);
+    console.log('📚 عدد الورش الكلي:', allWorkshops.length);
+    
+    // ✅ تصفية الورش الخاصة بالموظف
     const workshops = allWorkshops.filter(function(w) { 
-        return w.employeeId === id; 
+        return w.employeeId === id || w.employee === id;
     });
     
+    console.log('✅ عدد ورش الموظف:', workshops.length);
+    
     if (!workshops || workshops.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="empty-row">لا توجد ورش مسجلة</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5" class="empty-row">📭 لا توجد ورش مسجلة</td></tr>';
         return;
     }
     
     tbody.innerHTML = workshops.map(function(w, index) {
+        // استخدام workshopTitle أو workshop
+        var title = w.workshopTitle || w.workshop || '-';
+        var hours = w.hours || 0;
+        var organizer = w.organizer || '-';
+        var date = w.workshopDate || w.date || '-';
+        
         return `
             <tr>
                 <td>${index + 1}</td>
-                <td>${w.workshop || '-'}</td>
-                <td>${w.hours || 0}</td>
-                <td>${w.organizer || '-'}</td>
-                <td>${formatDate(w.date)}</td>
+                <td>${title}</td>
+                <td>${hours}</td>
+                <td>${organizer}</td>
+                <td>${formatDate(date)}</td>
             </tr>
         `;
     }).join('');
 }
 
 // ============================================
-// عرض الإنجازات
+// عرض الإنجازات - تصميم أفقي صغير
 // ============================================
-function renderAchievements(count) {
-    const container = document.getElementById('achievementsGrid');
+function renderAchievementsHorizontal(count) {
+    const container = document.getElementById('achievementsContainer');
     if (!container) return;
     
     const achievements = [
-        { icon: '🌟', name: 'المبتدئ', unlocked: count >= 0 },
-        { icon: '🥉', name: 'البرونز', unlocked: count >= 5 },
-        { icon: '🥈', name: 'الفضي', unlocked: count >= 10 },
-        { icon: '🥇', name: 'الذهبي', unlocked: count >= 20 },
-        { icon: '💎', name: 'الألماس', unlocked: count >= 30 },
-        { icon: '👑', name: 'البطل', unlocked: count >= 50 },
-        { icon: '🏆', name: 'الأسطورة', unlocked: count >= 100 }
+        { icon: '🌟', name: 'المبتدئ', min: 0 },
+        { icon: '🥉', name: 'البرونز', min: 5 },
+        { icon: '🥈', name: 'الفضي', min: 10 },
+        { icon: '🥇', name: 'الذهبي', min: 20 },
+        { icon: '💎', name: 'الألماس', min: 30 },
+        { icon: '👑', name: 'البطل', min: 50 },
+        { icon: '🏆', name: 'الأسطورة', min: 100 }
     ];
     
     container.innerHTML = achievements.map(function(a) {
+        var unlocked = count >= a.min;
         return `
-            <div class="achievement ${a.unlocked ? 'unlocked' : 'locked'}">
-                <div class="achievement-icon">${a.icon}</div>
-                <div class="achievement-name">${a.name}</div>
-                <div class="achievement-status">${a.unlocked ? '✅' : '🔒'}</div>
+            <div class="achievement-horizontal ${unlocked ? 'unlocked' : 'locked'}" 
+                 title="${a.name} - ${unlocked ? '✅ مكتمل' : '🔒 يحتاج ' + a.min + ' ورش'}">
+                <span class="ach-icon">${a.icon}</span>
+                <span class="ach-name">${a.name}</span>
+                <span class="ach-status">${unlocked ? '✅' : '🔒'}</span>
             </div>
         `;
     }).join('');
@@ -286,9 +304,38 @@ function updateProgress(count) {
 }
 
 // ============================================
+// دوال مساعدة
+// ============================================
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('ar-SA', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch {
+        return '-';
+    }
+}
+
+function getBadge(count) {
+    if (count >= 100) return { emoji: '🏆', name: 'Legend', color: '#ff6b6b' };
+    if (count >= 50) return { emoji: '👑', name: 'Champion', color: '#ffd700' };
+    if (count >= 30) return { emoji: '💎', name: 'Platinum', color: '#e5e4e2' };
+    if (count >= 20) return { emoji: '🥇', name: 'Gold', color: '#ffd700' };
+    if (count >= 10) return { emoji: '🥈', name: 'Silver', color: '#c0c0c0' };
+    if (count >= 5) return { emoji: '🥉', name: 'Bronze', color: '#cd7f32' };
+    return { emoji: '🌟', name: 'Beginner', color: '#4fc3f7' };
+}
+
+// ============================================
 // أحداث الصفحة
 // ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 صفحة الموظف جاهزة');
     loadEmployeeData();
     
     const searchInput = document.getElementById('employeeSearch');
@@ -310,4 +357,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-console.log('✅ employee.js loaded successfully');
+console.log('✅ employee.js تم تحميله بنجاح');
