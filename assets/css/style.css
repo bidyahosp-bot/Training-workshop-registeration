@@ -2071,3 +2071,78 @@ body.dark-mode .contact-item:hover {
         justify-content: center;
     }
 }
+/* ============================================
+   Achievements - Horizontal Design
+   ============================================ */
+
+.achievements-horizontal {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    justify-content: flex-start;
+}
+
+.achievement-horizontal {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    background: var(--bg-main);
+    border: 2px solid transparent;
+    transition: all 0.3s ease;
+    cursor: default;
+}
+
+.achievement-horizontal.unlocked {
+    border-color: var(--primary);
+    background: var(--primary-light);
+}
+
+.achievement-horizontal.locked {
+    opacity: 0.5;
+    border-color: #ddd;
+}
+
+.achievement-horizontal .ach-icon {
+    font-size: 1.1rem;
+}
+
+.achievement-horizontal .ach-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.achievement-horizontal .ach-status {
+    font-size: 0.7rem;
+}
+
+.achievement-horizontal:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+/* Profile Workshop Table - Improved */
+#profileWorkshopsBody .empty-row {
+    text-align: center;
+    padding: 30px !important;
+    color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .achievement-horizontal {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+    }
+    
+    .achievement-horizontal .ach-name {
+        display: none;
+    }
+    
+    .achievement-horizontal .ach-icon {
+        font-size: 1rem;
+    }
+}
