@@ -26,7 +26,7 @@ async function loadWorkshops() {
         if (tbody) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="7" class="error-row">
+                    <td colspan="8" class="error-row">
                         <i class="fas fa-exclamation-triangle"></i>
                         حدث خطأ في تحميل البيانات
                     </td>
@@ -151,7 +151,7 @@ function renderTable() {
     if (!pageItems.length) {
         tbody.innerHTML = `
             <tr>
-                <td colspan="7" class="empty-row">
+                <td colspan="8" class="empty-row">
                     <i class="fas fa-inbox"></i>
                     لا توجد ورش تدريبية مطابقة للبحث
                 </td>
@@ -165,7 +165,7 @@ function renderTable() {
         <tr>
             <td>${start + index + 1}</td>
             <td><strong>${w.employee || '-'}</strong></td>
-            <td>${w.employeeId || '-'}</td>
+            <td>${w.employeeId || '-'}</td>  <!-- ✅ عرض الرقم الوظيفي -->
             <td>${w.department || '-'}</td>
             <td>${w.workshop || '-'}</td>
             <td>${w.hours || 0}</td>
@@ -216,8 +216,9 @@ function exportToExcel() {
         return;
     }
     
-    const headers = ['الموظف', 'الرقم الوظيفي', 'القسم', 'عنوان الورشة', 'الساعات', 'الجهة المنظمة', 'التاريخ'];
-    const rows = filteredWorkshops.map(w => [
+    const headers = ['#', 'الموظف', 'الرقم الوظيفي', 'القسم', 'عنوان الورشة', 'الساعات', 'الجهة المنظمة', 'التاريخ'];
+    const rows = filteredWorkshops.map((w, index) => [
+        index + 1,
         w.employee || '',
         w.employeeId || '',
         w.department || '',
