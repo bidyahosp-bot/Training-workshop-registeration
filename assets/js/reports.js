@@ -10,6 +10,9 @@ let charts = {};
 // ============================================
 async function loadReportData() {
     try {
+        showLoading(true);
+        hideError();
+        
         console.log('📡 جاري تحميل بيانات التقارير...');
         const response = await fetch(API_URL);
         const result = await response.json();
@@ -17,54 +20,60 @@ async function loadReportData() {
         if (result.status === 'success' && result.data) {
             reportData = result.data;
             
-            const hasData = reportData.recentWorkshops && reportData.recentWorkshops.length > 0;
+            const hasData = reportData.allWorkshops && reportData.allWorkshops.length > 0;
             
             if (hasData) {
                 renderCharts(reportData);
+                renderEmployeeReport(reportData.allEmployees || reportData.topEmployees || []);
+                renderDepartmentReport(reportData.topDepartments || []);
+                document.getElementById('lastUpdated').textContent = reportData.lastUpdated || '-';
             } else {
                 showNoDataMessage();
             }
-            
-            renderEmployeeReport(reportData.allEmployees || reportData.topEmployees || []);
-            renderDepartmentReport(reportData.topDepartments || []);
         } else {
-            console.warn('⚠️ خطأ في البيانات:', result);
-            showErrorMessage('حدث خطأ في تحميل البيانات');
+            showError('حدث خطأ في تحميل البيانات: ' + (result.message || 'خطأ غير معروف'));
         }
     } catch (error) {
         console.error('❌ خطأ:', error);
-        showErrorMessage('حدث خطأ في الاتصال بالخادم');
+        showError('حدث خطأ في الاتصال بالخادم. تحقق من الرابط.');
+    } finally {
+        showLoading(false);
     }
 }
 
 // ============================================
-// عرض رسائل
+// حالة التحميل
+// ============================================
+function showLoading(show) {
+    const el = document.getElementById('loadingState');
+    if (el) el.style.display = show ? 'block' : 'none';
+}
+
+function showError(message) {
+    const el = document.getElementById('errorState');
+    const msg = document.getElementById('errorMessage');
+    if (el) el.style.display = 'block';
+    if (msg) msg.textContent = message;
+}
+
+function hideError() {
+    const el = document.getElementById('errorState');
+    if (el) el.style.display = 'none';
+}
+
+// ============================================
+// عرض رسالة عدم وجود بيانات
 // ============================================
 function showNoDataMessage() {
-    const container = document.querySelector('.charts-grid');
+    const container = document.getElementById('chartsGrid');
     if (container) {
         container.innerHTML = `
             <div class="no-data-message" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
                 <i class="fas fa-database" style="font-size: 3rem; color: var(--text-secondary);"></i>
                 <p style="margin-top: 15px; color: var(--text-secondary);">
-                    لا توجد بيانات كافية لعرض الرسوم البيانية.<br>
+                    لا توجد بيانات كافية لعرض التقارير.<br>
                     يرجى تسجيل ورش تدريبية أولاً.
                 </p>
-            </div>
-        `;
-    }
-}
-
-function showErrorMessage(message) {
-    const container = document.querySelector('.charts-grid');
-    if (container) {
-        container.innerHTML = `
-            <div class="error-message" style="grid-column: 1 / -1; text-align: center; padding: 50px;">
-                <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
-                <p style="margin-top: 15px; color: var(--text-secondary);">${message}</p>
-                <button onclick="loadReportData()" class="btn-primary" style="margin-top:15px;">
-                    <i class="fas fa-sync-alt"></i> إعادة المحاولة
-                </button>
             </div>
         `;
     }
@@ -74,7 +83,7 @@ function showErrorMessage(message) {
 // عرض الرسوم البيانية
 // ============================================
 function renderCharts(data) {
-    // 1. Monthly Workshops Chart - ✅ استخدام تاريخ الورشة
+    // 1. Monthly Workshops Chart
     const monthlyCanvas = document.getElementById('monthlyChart');
     if (!monthlyCanvas) return;
     
@@ -85,7 +94,6 @@ function renderCharts(data) {
     if (data.allWorkshops) {
         data.allWorkshops.forEach(function(w) {
             try {
-                // ✅ استخدام workshopDate إذا كان موجوداً، وإلا استخدم date
                 var dateToUse = w.workshopDate || w.date;
                 var date = new Date(dateToUse);
                 if (!isNaN(date.getTime())) {
@@ -98,6 +106,7 @@ function renderCharts(data) {
         });
     }
     
+    if (charts.monthly) charts.monthly.destroy();
     charts.monthly = new Chart(monthlyCanvas.getContext('2d'), {
         type: 'bar',
         data: {
@@ -113,15 +122,9 @@ function renderCharts(data) {
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
-            }
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
     });
 
@@ -133,6 +136,7 @@ function renderCharts(data) {
     const deptNames = deptData.map(function(d) { return d.name; });
     const deptHours = deptData.map(function(d) { return d.totalHours || d.workshops * 8; });
     
+    if (charts.department) charts.department.destroy();
     charts.department = new Chart(deptCanvas.getContext('2d'), {
         type: 'doughnut',
         data: {
@@ -146,16 +150,77 @@ function renderCharts(data) {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: true,
             plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { font: { family: 'Cairo' } }
-                }
+                legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
             }
         }
     });
 
-    // 3. Top Employees Chart
+    // 3. Organizer Chart
+    const orgCanvas = document.getElementById('organizerChart');
+    if (!orgCanvas) return;
+    
+    const organizers = {};
+    if (data.allWorkshops) {
+        data.allWorkshops.forEach(function(w) {
+            const org = w.organizer || 'غير محدد';
+            organizers[org] = (organizers[org] || 0) + 1;
+        });
+    }
+    const orgLabels = Object.keys(organizers);
+    const orgData = Object.values(organizers);
+    
+    if (charts.organizer) charts.organizer.destroy();
+    charts.organizer = new Chart(orgCanvas.getContext('2d'), {
+        type: 'pie',
+        data: {
+            labels: orgLabels.length ? orgLabels : ['لا توجد بيانات'],
+            datasets: [{
+                data: orgData.length ? orgData : [1],
+                backgroundColor: ['#1a7a3a', '#1976d2', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c', '#e67e22', '#2ecc71'],
+                borderWidth: 2,
+                borderColor: 'white'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+            }
+        }
+    });
+
+    // 4. Certificate Chart
+    const certCanvas = document.getElementById('certificateChart');
+    if (!certCanvas) return;
+    
+    const hasCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'نعم'; }).length : 0;
+    const noCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'لا'; }).length : 0;
+    
+    if (charts.certificate) charts.certificate.destroy();
+    charts.certificate = new Chart(certCanvas.getContext('2d'), {
+        type: 'doughnut',
+        data: {
+            labels: ['مع شهادة', 'بدون شهادة'],
+            datasets: [{
+                data: [hasCert || 1, noCert || 1],
+                backgroundColor: ['#27ae60', '#e74c3c'],
+                borderWidth: 2,
+                borderColor: 'white'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            plugins: {
+                legend: { position: 'bottom', labels: { font: { family: 'Cairo' } } }
+            }
+        }
+    });
+
+    // 5. Top Employees Chart
     const empCanvas = document.getElementById('topEmployeesChart');
     if (!empCanvas) return;
     
@@ -163,6 +228,7 @@ function renderCharts(data) {
     const empNames = topEmp.map(function(e) { return e.name; });
     const empWorkshops = topEmp.map(function(e) { return e.workshops; });
     
+    if (charts.topEmployees) charts.topEmployees.destroy();
     charts.topEmployees = new Chart(empCanvas.getContext('2d'), {
         type: 'bar',
         data: {
@@ -180,80 +246,9 @@ function renderCharts(data) {
         },
         options: {
             responsive: true,
-            plugins: {
-                legend: { display: false }
-            },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: { stepSize: 1 }
-                }
-            }
-        }
-    });
-
-    // 4. Organizer Chart
-    const orgCanvas = document.getElementById('organizerChart');
-    if (!orgCanvas) return;
-    
-    const organizers = {};
-    if (data.allWorkshops) {
-        data.allWorkshops.forEach(function(w) {
-            const org = w.organizer || 'غير محدد';
-            organizers[org] = (organizers[org] || 0) + 1;
-        });
-    }
-    const orgLabels = Object.keys(organizers);
-    const orgData = Object.values(organizers);
-    
-    charts.organizer = new Chart(orgCanvas.getContext('2d'), {
-        type: 'pie',
-        data: {
-            labels: orgLabels.length ? orgLabels : ['لا توجد بيانات'],
-            datasets: [{
-                data: orgData.length ? orgData : [1],
-                backgroundColor: ['#1a7a3a', '#1976d2', '#f39c12', '#e74c3c', '#9b59b6', '#1abc9c', '#e67e22', '#2ecc71'],
-                borderWidth: 2,
-                borderColor: 'white'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { font: { family: 'Cairo' } }
-                }
-            }
-        }
-    });
-
-    // 5. Certificate Chart
-    const certCanvas = document.getElementById('certificateChart');
-    if (!certCanvas) return;
-    
-    const hasCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'نعم'; }).length : 0;
-    const noCert = data.allWorkshops ? data.allWorkshops.filter(function(w) { return w.certificate === 'لا'; }).length : 0;
-    
-    charts.certificate = new Chart(certCanvas.getContext('2d'), {
-        type: 'doughnut',
-        data: {
-            labels: ['مع شهادة', 'بدون شهادة'],
-            datasets: [{
-                data: [hasCert || 1, noCert || 1],
-                backgroundColor: ['#27ae60', '#e74c3c'],
-                borderWidth: 2,
-                borderColor: 'white'
-            }]
-        },
-        options: {
-            responsive: true,
-            plugins: {
-                legend: {
-                    position: 'bottom',
-                    labels: { font: { family: 'Cairo' } }
-                }
-            }
+            maintainAspectRatio: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } }
         }
     });
 }
@@ -270,17 +265,16 @@ function renderEmployeeReport(employees) {
         return;
     }
 
-    tbody.innerHTML = employees.map(function(emp, index) {
+    tbody.innerHTML = employees.slice(0, 20).map(function(emp, index) {
         const badge = getBadge(emp.workshops);
-        const avgHours = emp.workshops > 0 ? ((emp.totalHours || 0) / emp.workshops).toFixed(1) : 0;
         return `
             <tr>
                 <td>${index + 1}</td>
-                <td><strong>${emp.name}</strong></td>
+                <td><strong>${emp.employeeId || '-'}</strong></td>
+                <td>${emp.name || '-'}</td>
                 <td>${emp.department || '-'}</td>
-                <td>${emp.workshops}</td>
+                <td>${emp.workshops || 0}</td>
                 <td>${emp.totalHours || 0}</td>
-                <td>${avgHours}</td>
                 <td>
                     <span class="badge" style="background:${badge.color}20; color:${badge.color};">
                         ${badge.emoji} ${badge.name}
@@ -299,7 +293,7 @@ function renderDepartmentReport(departments) {
     if (!tbody) return;
     
     if (!departments || !departments.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-row">لا توجد بيانات</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="6" class="empty-row">لا توجد بيانات</td></tr>';
         return;
     }
 
@@ -307,7 +301,6 @@ function renderDepartmentReport(departments) {
 
     tbody.innerHTML = departments.map(function(dept, index) {
         const rate = totalWorkshops > 0 ? ((dept.workshops / totalWorkshops) * 100).toFixed(1) : 0;
-        const avgPerEmployee = dept.employees > 0 ? ((dept.totalHours || dept.workshops * 8) / dept.employees).toFixed(1) : 0;
         return `
             <tr>
                 <td>${index + 1}</td>
@@ -315,7 +308,6 @@ function renderDepartmentReport(departments) {
                 <td>${dept.employees || 0}</td>
                 <td>${dept.workshops}</td>
                 <td>${dept.totalHours || (dept.workshops * 8)}</td>
-                <td>${avgPerEmployee}</td>
                 <td>
                     <div class="progress-bar">
                         <div class="progress-fill" style="width: ${rate}%; background: var(--primary);"></div>
@@ -328,30 +320,105 @@ function renderDepartmentReport(departments) {
 }
 
 // ============================================
-// إنشاء شهادة
+// تصدير PDF - ملف قابل للتحميل
 // ============================================
-function generateCertificate(employee, period) {
-    const badge = getBadge(employee.workshops);
-    return `
-        <div class="certificate-card">
-            <div class="certificate-header">
-                <img src="assets/img/logo.png" alt="Logo" class="cert-logo">
-                <h2>شهادة تقدير</h2>
-            </div>
-            <div class="certificate-body">
-                <p>تقديراً لجهوده المتميزة في</p>
-                <h3>${employee.name}</h3>
-                <p>من قسم ${employee.department || 'غير محدد'}</p>
-                <div class="cert-badge">${badge.emoji} ${badge.name}</div>
-                <p>لتسجيله ${employee.workshops} ورشة تدريبية</p>
-                <p class="cert-period">${period === 'monthly' ? 'الشهر الحالي' : 'السنة الحالية'}</p>
-            </div>
-            <div class="certificate-footer">
-                <p>مستشفى بدية - منصة التدريب والتطوير المهني</p>
-                <p class="cert-date">${new Date().toLocaleDateString('ar-SA')}</p>
-            </div>
-        </div>
-    `;
+function exportPDF() {
+    if (!reportData || !reportData.allWorkshops || reportData.allWorkshops.length === 0) {
+        alert('⚠️ لا توجد بيانات لتصديرها');
+        return;
+    }
+    
+    // إظهار رسالة التحميل
+    const btn = document.getElementById('exportPDF');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحميل...';
+    btn.disabled = true;
+    
+    try {
+        // إنشاء محتوى PDF
+        var content = generatePDFContent();
+        
+        // إنشاء Blob للتحميل
+        var blob = new Blob([content], { type: 'application/pdf' });
+        var url = URL.createObjectURL(blob);
+        
+        // إنشاء رابط التحميل
+        var link = document.createElement('a');
+        link.href = url;
+        link.download = 'تقرير_الورش_' + new Date().toISOString().split('T')[0] + '.pdf';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        alert('✅ تم تصدير التقرير بنجاح!');
+    } catch (error) {
+        console.error('❌ خطأ في التصدير:', error);
+        alert('❌ حدث خطأ في تصدير التقرير. يرجى المحاولة مرة أخرى.');
+    } finally {
+        btn.innerHTML = originalText;
+        btn.disabled = false;
+    }
+}
+
+// ============================================
+// إنشاء محتوى PDF
+// ============================================
+function generatePDFContent() {
+    var data = reportData;
+    var summary = data.summary || {};
+    var today = new Date().toLocaleDateString('ar-SA');
+    
+    var content = [];
+    
+    // العنوان
+    content.push('='.repeat(50));
+    content.push('منصة مستشفى بدية للتدريب والتطوير المهني');
+    content.push('تقرير الأداء التدريبي');
+    content.push('='.repeat(50));
+    content.push('');
+    content.push('تاريخ التقرير: ' + today);
+    content.push('');
+    
+    // الملخص
+    content.push('📊 الملخص العام');
+    content.push('-'.repeat(40));
+    content.push('إجمالي الورش: ' + (summary.totalWorkshops || 0));
+    content.push('إجمالي ساعات التدريب: ' + (summary.totalHours || 0));
+    content.push('عدد الموظفين المشاركين: ' + (summary.totalEmployees || 0));
+    content.push('');
+    
+    // أفضل الموظفين
+    var topEmployees = data.topEmployees || [];
+    if (topEmployees.length > 0) {
+        content.push('🏆 أفضل الموظفين');
+        content.push('-'.repeat(40));
+        topEmployees.forEach(function(emp, index) {
+            content.push((index + 1) + '. ' + (emp.name || emp.employeeId) + 
+                        ' - ' + (emp.workshops || 0) + ' ورشة - ' + 
+                        (emp.totalHours || 0) + ' ساعة');
+        });
+        content.push('');
+    }
+    
+    // أفضل الأقسام
+    var topDepts = data.topDepartments || [];
+    if (topDepts.length > 0) {
+        content.push('🏢 أفضل الأقسام');
+        content.push('-'.repeat(40));
+        topDepts.forEach(function(dept, index) {
+            content.push((index + 1) + '. ' + dept.name + 
+                        ' - ' + dept.workshops + ' ورشة - ' + 
+                        dept.employees + ' موظف');
+        });
+        content.push('');
+    }
+    
+    content.push('='.repeat(50));
+    content.push('تم إنشاء التقرير بواسطة منصة BTH');
+    content.push('جميع الحقوق محفوظة © 2026 مستشفى بدية');
+    
+    return content.join('\n');
 }
 
 // ============================================
@@ -365,42 +432,13 @@ document.addEventListener('DOMContentLoaded', function() {
     if (generateBtn) {
         generateBtn.addEventListener('click', function() {
             loadReportData();
-            const btn = this;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التحديث...';
-            setTimeout(function() {
-                btn.innerHTML = '<i class="fas fa-chart-bar"></i> إنشاء التقرير';
-            }, 1000);
         });
     }
 
     // Export PDF
     const exportBtn = document.getElementById('exportPDF');
     if (exportBtn) {
-        exportBtn.addEventListener('click', function() {
-            alert('📄 سيتم تصدير التقرير كملف PDF في الإصدار القادم');
-        });
-    }
-
-    // Generate Certificates
-    const certBtn = document.getElementById('generateCertificates');
-    if (certBtn) {
-        certBtn.addEventListener('click', function() {
-            const period = document.getElementById('certificatePeriod').value;
-            const top = parseInt(document.getElementById('certificateTop').value);
-            const employees = reportData.topEmployees || [];
-
-            if (!employees.length) {
-                alert('لا توجد بيانات كافية لإنشاء الشهادات');
-                return;
-            }
-
-            const topEmployees = employees.slice(0, top);
-            const preview = document.getElementById('certificatePreview');
-            preview.innerHTML = topEmployees.map(function(emp) {
-                return generateCertificate(emp, period);
-            }).join('');
-            preview.style.display = 'block';
-        });
+        exportBtn.addEventListener('click', exportPDF);
     }
 });
 
