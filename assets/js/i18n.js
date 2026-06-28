@@ -120,6 +120,7 @@ const translations = {
         project_developer: "المطور",
         project_date: "تاريخ الإطلاق",
         project_tech: "التقنيات المستخدمة",
+        nav_employee": "صفحة الموظف",
         contact_us: "تواصل معنا"
     },
     en: {
@@ -239,7 +240,9 @@ const translations = {
         project_developer: "Developer",
         project_date: "Launch Date",
         project_tech: "Technologies Used",
+        nav_employee": "Employee Profile",
         contact_us: "Contact Us"
+    
     }
 };
 
