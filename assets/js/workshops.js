@@ -16,23 +16,15 @@ async function loadWorkshops() {
         if (result.status === 'success' && result.data) {
             allWorkshops = result.data.allWorkshops || result.data.recentWorkshops || [];
             filteredWorkshops = [...allWorkshops];
-
             populateFilters(allWorkshops);
             renderTable();
+        } else {
+            console.warn('Workshops API response error:', result);
+            showError('حدث خطأ في تحميل البيانات من الخادم.');
         }
     } catch (error) {
         console.error('Error loading workshops:', error);
-        const tbody = document.getElementById('workshopsBody');
-        if (tbody) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="error-row">
-                        <i class="fas fa-exclamation-triangle"></i>
-                        حدث خطأ في تحميل البيانات
-                    </td>
-                </tr>
-            `;
-        }
+        showError('حدث خطأ في الاتصال بالخادم. تحقق من الرابط.');
     }
 }
 
