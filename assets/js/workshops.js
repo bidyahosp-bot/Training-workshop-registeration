@@ -10,21 +10,54 @@ const itemsPerPage = 20;
 // Load workshops data
 async function loadWorkshops() {
     try {
+        console.log('📡 جاري تحميل البيانات من API...');
         const response = await fetch(API_URL);
+        console.log('📡 تم استلام الرد من الخادم:', response.status);
+        
+        if (!response.ok) {
+            throw new Error('HTTP Error: ' + response.status);
+        }
+        
         const result = await response.json();
+        console.log('📡 البيانات المستلمة:', result);
 
         if (result.status === 'success' && result.data) {
             allWorkshops = result.data.allWorkshops || result.data.recentWorkshops || [];
-            filteredWorkshops = [...allWorkshops];
-            populateFilters(allWorkshops);
-            renderTable();
+            console.log('✅ عدد الورش المستلمة:', allWorkshops.length);
+            
+            if (allWorkshops.length === 0) {
+                showError('⚠️ لا توجد ورش تدريبية مسجلة حالياً.');
+            } else {
+                filteredWorkshops = [...allWorkshops];
+                populateFilters(allWorkshops);
+                renderTable();
+                updateResultsCount();
+            }
         } else {
-            console.warn('Workshops API response error:', result);
-            showError('حدث خطأ في تحميل البيانات من الخادم.');
+            console.warn('⚠️ API response error:', result);
+            showError('حدث خطأ في تحميل البيانات من الخادم: ' + (result.message || 'خطأ غير معروف'));
         }
     } catch (error) {
-        console.error('Error loading workshops:', error);
-        showError('حدث خطأ في الاتصال بالخادم. تحقق من الرابط.');
+        console.error('❌ Error loading workshops:', error);
+        showError('❌ حدث خطأ في الاتصال بالخادم. تحقق من الرابط: ' + API_URL);
+    }
+}
+
+// Show error message on page
+function showError(message) {
+    const tbody = document.getElementById('workshopsBody');
+    if (tbody) {
+        tbody.innerHTML = `
+            <tr>
+                <td colspan="8" class="error-row">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <p style="margin-top: 10px;">${message}</p>
+                    <button onclick="loadWorkshops()" class="btn-primary" style="margin-top: 15px;">
+                        <i class="fas fa-sync-alt"></i> إعادة المحاولة
+                    </button>
+                </td>
+            </tr>
+        `;
     }
 }
 
@@ -105,6 +138,7 @@ function applyFilters() {
     filteredWorkshops = allWorkshops.filter(w => {
         const matchSearch = !searchTerm ||
             (w.employee && w.employee.toLowerCase().includes(searchTerm)) ||
+            (w.employeeId && w.employeeId.toLowerCase().includes(searchTerm)) ||
             (w.department && w.department.toLowerCase().includes(searchTerm)) ||
             (w.workshop && w.workshop.toLowerCase().includes(searchTerm)) ||
             (w.organizer && w.organizer.toLowerCase().includes(searchTerm));
@@ -153,21 +187,20 @@ function renderTable() {
         return;
     }
 
-    // في دالة renderTable
-tbody.innerHTML = pageItems.map(function(w, index) {
-    return `
-        <tr>
-            <td>${start + index + 1}</td>
-            <td><strong>${w.employeeId || '-'}</strong></td>
-            <td>${w.employee || '-'}</td>
-            <td>${w.department || '-'}</td>
-            <td>${w.workshop || '-'}</td>
-            <td>${w.hours || 0}</td>
-            <td>${w.organizer || '-'}</td>
-            <td>${formatDate(w.date)}</td>
-        </tr>
-    `;
-}).join('');
+    tbody.innerHTML = pageItems.map(function(w, index) {
+        return `
+            <tr>
+                <td>${start + index + 1}</td>
+                <td><strong>${w.employeeId || '-'}</strong></td>
+                <td>${w.employee || '-'}</td>
+                <td>${w.department || '-'}</td>
+                <td>${w.workshop || '-'}</td>
+                <td>${w.hours || 0}</td>
+                <td>${w.organizer || '-'}</td>
+                <td>${formatDate(w.date)}</td>
+            </tr>
+        `;
+    }).join('');
 
     renderPagination();
 }
@@ -211,11 +244,11 @@ function exportToExcel() {
         return;
     }
     
-    const headers = ['#', 'الموظف', 'الرقم الوظيفي', 'القسم', 'عنوان الورشة', 'الساعات', 'الجهة المنظمة', 'التاريخ'];
+    const headers = ['#', 'الرقم الوظيفي', 'الموظف', 'القسم', 'عنوان الورشة', 'الساعات', 'الجهة المنظمة', 'التاريخ'];
     const rows = filteredWorkshops.map((w, index) => [
         index + 1,
-        w.employee || '',
         w.employeeId || '',
+        w.employee || '',
         w.department || '',
         w.workshop || '',
         w.hours || 0,
