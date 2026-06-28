@@ -5,44 +5,47 @@
 let allEmployees = [];
 let allWorkshops = [];
 
-// ✅ تحميل البيانات
+// ============================================
+// تحميل البيانات
+// ============================================
 async function loadEmployeeData() {
     try {
         console.log('📡 جاري تحميل بيانات الموظفين...');
         const response = await fetch(API_URL);
         const result = await response.json();
         
-        console.log('📡 رد الخادم:', result);
-        
         if (result.status === 'success' && result.data) {
             allEmployees = result.data.allEmployees || result.data.topEmployees || [];
             allWorkshops = result.data.recentWorkshops || [];
             
             console.log('✅ عدد الموظفين:', allEmployees.length);
-            console.log('✅ عدد الورش:', allWorkshops.length);
             
             if (allEmployees.length > 0) {
                 renderEmployeeList(allEmployees);
             } else {
-                showEmployeeError('لا توجد بيانات موظفين لعرضها');
+                showMessage('لا توجد بيانات موظفين', 'warning');
             }
         } else {
-            showEmployeeError('حدث خطأ في تحميل البيانات');
+            showMessage('حدث خطأ في تحميل البيانات', 'error');
         }
     } catch (error) {
         console.error('❌ خطأ:', error);
-        showEmployeeError('حدث خطأ في الاتصال بالخادم');
+        showMessage('حدث خطأ في الاتصال بالخادم', 'error');
     }
 }
 
-// ✅ عرض رسالة خطأ
-function showEmployeeError(message) {
+// ============================================
+// عرض رسائل
+// ============================================
+function showMessage(text, type) {
     const container = document.getElementById('employeeList');
     if (container) {
+        const icon = type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle';
+        const color = type === 'error' ? '#e74c3c' : '#f39c12';
         container.innerHTML = `
-            <div class="error-message" style="text-align:center; padding:30px;">
-                <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#e74c3c;"></i>
-                <p style="margin-top:10px;">${message}</p>
+            <div style="text-align:center; padding:40px;">
+                <i class="fas ${icon}" style="font-size:2rem; color:${color};"></i>
+                <p style="margin-top:10px; color:var(--text-secondary);">${text}</p>
                 <button onclick="loadEmployeeData()" class="btn-primary" style="margin-top:15px;">
                     <i class="fas fa-sync-alt"></i> إعادة المحاولة
                 </button>
@@ -51,46 +54,63 @@ function showEmployeeError(message) {
     }
 }
 
-// ✅ عرض قائمة الموظفين
+// ============================================
+// عرض قائمة الموظفين
+// ============================================
 function renderEmployeeList(employees) {
     const container = document.getElementById('employeeList');
     if (!container) return;
     
-    if (!employees || !Array.isArray(employees) || employees.length === 0) {
-        container.innerHTML = '<p class="no-data">لا توجد بيانات موظفين</p>';
+    if (!employees || employees.length === 0) {
+        container.innerHTML = '<p class="no-data">لا توجد بيانات</p>';
         return;
     }
     
-    // عرض أول 50 موظف فقط
-    const displayEmployees = employees.slice(0, 50);
+    const deptIcons = {
+        'الأطباء': '👨‍⚕️', 'التمريض': '👩‍⚕️', 'التضميد': '🩹',
+        'الصيدلة': '💊', 'الأشعة': '📷', 'الأسنان': '🦷',
+        'المختبر': '🔬', 'السجلات الطبية': '📋', 'الإدارة': '📊',
+        'التثقيف الصحي': '📚', 'التغذية': '🍎'
+    };
     
-    container.innerHTML = displayEmployees.map(function(emp, index) {
-        const badge = getBadge(emp.workshops || 0);
+    // عرض أول 50 موظف فقط
+    const displayList = employees.slice(0, 50);
+    
+    container.innerHTML = displayList.map(function(emp, index) {
+        if (!emp) return '';
+        
+        const id = emp.employeeId || 'غير محدد';
+        const name = emp.name || id;
         const dept = emp.department || 'قسم غير محدد';
+        const workshops = emp.workshops || 0;
+        const hours = emp.totalHours || 0;
+        const badge = getBadge(workshops);
+        const icon = deptIcons[dept] || '🏢';
         
         return `
-            <div class="employee-card" data-id="${emp.employeeId}">
+            <div class="employee-card" data-id="${id}">
                 <div class="emp-rank">#${index + 1}</div>
                 <div class="emp-avatar"><i class="fas fa-user-circle"></i></div>
                 <div class="emp-info">
-                    <div class="emp-name">${emp.name || emp.employeeId}</div>
-                    <div class="emp-id">🆔 ${emp.employeeId}</div>
-                    <div class="emp-dept">${dept}</div>
+                    <div class="emp-name">${name}</div>
+                    <div class="emp-id">🆔 ${id}</div>
+                    <div class="emp-dept">${icon} ${dept}</div>
                 </div>
                 <div class="emp-stats">
-                    <span>📚 ${emp.workshops || 0}</span>
+                    <span>📚 ${workshops}</span>
                     <span class="emp-badge">${badge.emoji}</span>
                 </div>
-                <button class="emp-view-btn" data-id="${emp.employeeId}">
+                <button class="emp-view-btn" data-id="${id}">
                     <i class="fas fa-arrow-left"></i>
                 </button>
             </div>
         `;
     }).join('');
     
-    // إضافة أحداث النقر
+    // أحداث النقر
     container.querySelectorAll('.emp-view-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation();
             const id = this.dataset.id;
             document.getElementById('employeeSearch').value = id;
             viewEmployeeProfile(id);
@@ -98,8 +118,7 @@ function renderEmployeeList(employees) {
     });
     
     container.querySelectorAll('.employee-card').forEach(function(card) {
-        card.addEventListener('click', function(e) {
-            if (e.target.closest('.emp-view-btn')) return;
+        card.addEventListener('click', function() {
             const id = this.dataset.id;
             document.getElementById('employeeSearch').value = id;
             viewEmployeeProfile(id);
@@ -107,7 +126,9 @@ function renderEmployeeList(employees) {
     });
 }
 
-// ✅ عرض الملف الشخصي (مبسط ومنظم)
+// ============================================
+// عرض الملف الشخصي
+// ============================================
 function viewEmployeeProfile(id) {
     if (!id) {
         alert('⚠️ يرجى إدخال رقم وظيفي أو اسم موظف');
@@ -115,18 +136,23 @@ function viewEmployeeProfile(id) {
     }
     
     // البحث بالرقم الوظيفي
-    let employee = allEmployees.find(function(e) { return e.employeeId === id; });
+    let employee = allEmployees.find(function(e) { 
+        return e.employeeId === id; 
+    });
     
-    // إذا لم يتم العثور، حاول البحث بالاسم
+    // البحث بالاسم إذا لم يتم العثور
     if (!employee) {
-        employee = allEmployees.find(function(e) { return e.name === id; });
+        employee = allEmployees.find(function(e) { 
+            return e.name === id; 
+        });
         if (employee) {
             document.getElementById('employeeSearch').value = employee.employeeId;
+            id = employee.employeeId;
         }
     }
     
     if (!employee) {
-        alert('⚠️ لم يتم العثور على موظف: "' + id + '"');
+        alert('⚠️ لم يتم العثور على موظف بالرقم الوظيفي أو الاسم: "' + id + '"');
         return;
     }
     
@@ -134,49 +160,55 @@ function viewEmployeeProfile(id) {
     const profile = document.getElementById('employeeProfile');
     if (profile) profile.style.display = 'block';
     
-    // ✅ تحديث المعلومات بشكل منظم
+    // تحديث المعلومات
     const name = employee.name || employee.employeeId;
-    const empId = employee.employeeId;
-    const dept = employee.department || 'قسم غير محدد';
-    const workshops = employee.workshops || 0;
-    const hours = employee.totalHours || 0;
-    const rank = allEmployees.findIndex(function(e) { return e.employeeId === empId; }) + 1;
-    const badge = getBadge(workshops);
-    
-    // تحديث العناصر
     document.getElementById('profileName').textContent = name;
-    document.getElementById('profileEmployeeId').textContent = empId;
-    document.getElementById('profileDepartment').textContent = dept;
+    document.getElementById('profileEmployeeId').textContent = employee.employeeId;
+    document.getElementById('profileDepartment').textContent = employee.department || 'قسم غير محدد';
     
+    const badge = getBadge(employee.workshops || 0);
     const badgeEl = document.getElementById('profileBadge');
     if (badgeEl) {
         badgeEl.innerHTML = badge.emoji + ' ' + badge.name;
         badgeEl.style.color = badge.color;
     }
     
-    document.getElementById('profileWorkshops').textContent = workshops;
-    document.getElementById('profileHours').textContent = hours;
+    document.getElementById('profileWorkshops').textContent = employee.workshops || 0;
+    document.getElementById('profileHours').textContent = employee.totalHours || 0;
+    
+    // الترتيب
+    const rank = allEmployees.findIndex(function(e) { 
+        return e.employeeId === employee.employeeId; 
+    }) + 1;
     document.getElementById('profileRank').textContent = '#' + (rank > 0 ? rank : 'N/A');
     
-    // تحديث التقدم
-    updateProgress(workshops);
-    renderEmployeeWorkshops(empId);
-    renderAchievements(workshops);
+    // التقدم
+    updateProgress(employee.workshops || 0);
     
-    // التمرير إلى الملف الشخصي
+    // سجل الورش
+    renderEmployeeWorkshops(employee.employeeId);
+    
+    // الإنجازات
+    renderAchievements(employee.workshops || 0);
+    
+    // التمرير
     if (profile) {
         setTimeout(function() {
             profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 100);
+        }, 200);
     }
 }
 
-// ✅ عرض ورش الموظف
+// ============================================
+// عرض سجل الورش
+// ============================================
 function renderEmployeeWorkshops(id) {
     const tbody = document.getElementById('profileWorkshopsBody');
     if (!tbody) return;
     
-    const workshops = allWorkshops.filter(function(w) { return w.employeeId === id; });
+    const workshops = allWorkshops.filter(function(w) { 
+        return w.employeeId === id; 
+    });
     
     if (!workshops || workshops.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-row">لا توجد ورش مسجلة</td></tr>';
@@ -196,7 +228,9 @@ function renderEmployeeWorkshops(id) {
     }).join('');
 }
 
-// ✅ عرض الإنجازات
+// ============================================
+// عرض الإنجازات
+// ============================================
 function renderAchievements(count) {
     const container = document.getElementById('achievementsGrid');
     if (!container) return;
@@ -222,7 +256,9 @@ function renderAchievements(count) {
     }).join('');
 }
 
-// ✅ تحديث شريط التقدم
+// ============================================
+// تحديث شريط التقدم
+// ============================================
 function updateProgress(count) {
     const levels = [
         { min: 0, max: 4, name: '🌟 Beginner', next: '🥉 Bronze (5)' },
@@ -244,16 +280,15 @@ function updateProgress(count) {
     }
     
     const progress = next.max !== Infinity ? ((count - current.min) / (next.max - current.min)) * 100 : 100;
-    const progressPercent = Math.min(progress, 100);
-    
     document.getElementById('currentBadge').textContent = current.name;
     document.getElementById('nextBadge').textContent = next.max !== Infinity ? next.name + ' (' + next.min + ')' : '🏆 Legend (100+)';
-    document.getElementById('progressFill').style.width = progressPercent + '%';
+    document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
 }
 
-// ✅ أحداث الصفحة
+// ============================================
+// أحداث الصفحة
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('📄 صفحة الموظف جاهزة');
     loadEmployeeData();
     
     const searchInput = document.getElementById('employeeSearch');
@@ -275,4 +310,4 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-console.log('✅ employee.js تم تحميله');
+console.log('✅ employee.js loaded successfully');
