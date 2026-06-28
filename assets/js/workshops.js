@@ -161,18 +161,21 @@ function renderTable() {
         return;
     }
 
-    tbody.innerHTML = pageItems.map((w, index) => `
+    // في دالة renderTable
+tbody.innerHTML = pageItems.map(function(w, index) {
+    return `
         <tr>
             <td>${start + index + 1}</td>
-            <td><strong>${w.employee || '-'}</strong></td>
-            <td>${w.employeeId || '-'}</td>  <!-- ✅ عرض الرقم الوظيفي -->
+            <td><strong>${w.employeeId || '-'}</strong></td>
+            <td>${w.employee || '-'}</td>
             <td>${w.department || '-'}</td>
             <td>${w.workshop || '-'}</td>
             <td>${w.hours || 0}</td>
             <td>${w.organizer || '-'}</td>
             <td>${formatDate(w.date)}</td>
         </tr>
-    `).join('');
+    `;
+}).join('');
 
     renderPagination();
 }
