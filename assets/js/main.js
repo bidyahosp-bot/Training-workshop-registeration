@@ -159,3 +159,93 @@ async function populateDepartments(selectElement) {
         selectElement.appendChild(option);
     });
 }
+// ============================================
+// PWA - نافذة تثبيت التطبيق
+// ============================================
+
+let deferredPrompt;
+
+// ✅ عند جاهزية التطبيق للتثبيت
+window.addEventListener('beforeinstallprompt', function(e) {
+  console.log('📱 التطبيق جاهز للتثبيت');
+  e.preventDefault();
+  deferredPrompt = e;
+  
+  // عرض نافذة التثبيت
+  showInstallBanner();
+});
+
+// ✅ عرض نافذة التثبيت
+function showInstallBanner() {
+  // التحقق من عدم وجود النافذة مسبقاً
+  if (document.getElementById('installBanner')) return;
+  
+  var banner = document.createElement('div');
+  banner.id = 'installBanner';
+  banner.className = 'install-banner';
+  banner.innerHTML = `
+    <div class="install-banner-content">
+      <div class="install-icon">
+        <i class="fas fa-download"></i>
+      </div>
+      <div class="install-text">
+        <h3>📱 ثبّت التطبيق</h3>
+        <p>أضف المنصة إلى شاشة هاتفك للوصول السريع</p>
+      </div>
+      <div class="install-actions">
+        <button id="installAppBtn" class="btn-install">
+          <i class="fas fa-download"></i> تثبيت
+        </button>
+        <button id="closeBannerBtn" class="btn-close-banner">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+    </div>
+  `;
+  
+  document.body.appendChild(banner);
+  
+  // زر التثبيت
+  document.getElementById('installAppBtn').addEventListener('click', function() {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      deferredPrompt.userChoice.then(function(choiceResult) {
+        if (choiceResult.outcome === 'accepted') {
+          console.log('✅ تم تثبيت التطبيق');
+          document.getElementById('installBanner').style.display = 'none';
+        } else {
+          console.log('❌ تم رفض التثبيت');
+        }
+        deferredPrompt = null;
+      });
+    }
+  });
+  
+  // إغلاق النافذة
+  document.getElementById('closeBannerBtn').addEventListener('click', function() {
+    document.getElementById('installBanner').style.display = 'none';
+    localStorage.setItem('bth_install_banner_closed', 'true');
+  });
+}
+
+// ✅ التحقق من تثبيت التطبيق مسبقاً
+window.addEventListener('appinstalled', function() {
+  console.log('✅ تم تثبيت التطبيق بنجاح');
+  document.getElementById('installBanner').style.display = 'none';
+  localStorage.setItem('bth_install_banner_closed', 'true');
+});
+
+// ✅ إظهار النافذة بعد 3 ثوانٍ من تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+  setTimeout(function() {
+    // التحقق من عدم إغلاق النافذة مسبقاً
+    var bannerClosed = localStorage.getItem('bth_install_banner_closed');
+    if (!bannerClosed && !window.matchMedia('(display-mode: standalone)').matches) {
+      // إذا كان المستخدم على هاتف وليس في وضع التطبيق
+      var isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        showInstallBanner();
+      }
+    }
+  }, 3000);
+});
