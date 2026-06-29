@@ -2,7 +2,7 @@
   "name": "منصة مستشفى بدية للتدريب والتطوير المهني",
   "short_name": "BTH",
   "description": "منصة مستشفى بدية للتدريب والتطوير المهني",
-  "start_url": "./index.html",
+  "start_url": ".",
   "display": "standalone",
   "background_color": "#1a7a3a",
   "theme_color": "#1a7a3a",
@@ -67,7 +67,7 @@
       "name": "تسجيل ورشة",
       "short_name": "تسجيل",
       "description": "سجل ورشة تدريبية جديدة",
-      "url": "./register.html"
+      "url": "/register.html"
       "icons": [
         {
           "src": "assets/icons/icon-96x96.png",
@@ -79,7 +79,7 @@
       "name": "لوحة الشرف",
       "short_name": "الشرف",
       "description": "عرض أفضل الموظفين",
-      "url": "./dashboard.html",
+      "url": "/dashboard.html",
       "icons": [
         {
           "src": "assets/icons/icon-96x96.png",
@@ -91,7 +91,7 @@
       "name": "سجل الورش",
       "short_name": "السجل",
       "description": "استعراض جميع الورش",
-      "url": "./workshops.html",
+      "url": "/workshops.html",
       "icons": [
         {
           "src": "assets/icons/icon-96x96.png",
