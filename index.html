@@ -226,6 +226,9 @@ window.addEventListener('beforeinstallprompt', function(e) {
 window.addEventListener('appinstalled', function() {
     console.log('✅ تم تثبيت التطبيق بنجاح');
 });
+    // حذف إعداد إغلاق نافذة التثبيت (مرة واحدة)
+localStorage.removeItem('bth_install_banner_closed');
+console.log('✅ تم حذف إعداد التثبيت المخزن');
 </script>
 </body>
 </html>
