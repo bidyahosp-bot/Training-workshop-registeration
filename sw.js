@@ -5,13 +5,14 @@
 const CACHE_NAME = 'bth-cache-v3.0';
 const ASSETS = [
   '/',
-  './index.html',
-  './dashboard.html',
-  './workshops.html',
-  './register.html',
-  './reports.html',
-  './employee.html',
-  './about.html',
+  '/index.html',
+  '/dashboard.html',
+  '/workshops.html',
+  '/register.html',
+  '/reports.html',
+  '/employee.html',
+  '/about.html',
+   '/offline.html',  // ✅ أضف هذا السطر
   '/manifest.json',
   '/sw.js',
   '/assets/css/style.css',
