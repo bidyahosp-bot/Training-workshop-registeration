@@ -329,3 +329,68 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     updateUI();
 });
+// ============================================
+// ترجمة الأقسام
+// ============================================
+function translateDepartment(deptName, lang) {
+    lang = lang || currentLang || 'ar';
+    
+    const deptTranslations = {
+        ar: {
+            'الأطباء': 'الأطباء',
+            'التمريض': 'التمريض',
+            'التضميد': 'التضميد',
+            'الصيدلة': 'الصيدلة',
+            'الأشعة': 'الأشعة',
+            'الأسنان': 'الأسنان',
+            'المختبر': 'المختبر',
+            'السجلات الطبية': 'السجلات الطبية',
+            'الإدارة': 'الإدارة',
+            'التثقيف الصحي': 'التثقيف الصحي',
+            'التغذية': 'التغذية',
+            'الموارد البشرية': 'الموارد البشرية',
+            'الجودة': 'الجودة',
+            'السلامة': 'السلامة',
+            'الصيانة': 'الصيانة'
+        },
+        en: {
+            'الأطباء': 'Doctors',
+            'التمريض': 'Nursing',
+            'التضميد': 'Dressing',
+            'الصيدلة': 'Pharmacy',
+            'الأشعة': 'Radiology',
+            'الأسنان': 'Dentistry',
+            'المختبر': 'Laboratory',
+            'السجلات الطبية': 'Medical Records',
+            'الإدارة': 'Administration',
+            'التثقيف الصحي': 'Health Education',
+            'التغذية': 'Nutrition',
+            'الموارد البشرية': 'Human Resources',
+            'الجودة': 'Quality',
+            'السلامة': 'Safety',
+            'الصيانة': 'Maintenance'
+        }
+    };
+    
+    return deptTranslations[lang]?.[deptName] || deptName;
+}
+
+// دالة لتحديث ترجمة الأقسام في كل الصفحات
+function translateAllDepartments() {
+    document.querySelectorAll('[data-dept]').forEach(function(el) {
+        const deptName = el.getAttribute('data-dept');
+        if (deptName) {
+            el.textContent = translateDepartment(deptName);
+        }
+    });
+}
+
+// استدعاء عند تغيير اللغة
+document.addEventListener('DOMContentLoaded', function() {
+    // إضافة استماع لتغيير اللغة
+    document.querySelectorAll('.lang-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            setTimeout(translateAllDepartments, 100);
+        });
+    });
+});
