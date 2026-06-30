@@ -1,8 +1,8 @@
 {
-  "name": "منصة مستشفى بدية للتدريب والتطوير المهني",
+  "name": "منصة مستشفى بدية للتدريب والتطوير المهني",  // ✅ صحح من "متصف" إلى "منصة"
   "short_name": "BTH",
   "description": "منصة مستشفى بدية للتدريب والتطوير المهني",
-  "start_url": "/",
+  "start_url": "/Training-workshop-registration/",  // ✅ أضف اسم المستودع
   "display": "standalone",
   "background_color": "#1a7a3a",
   "theme_color": "#1a7a3a",
@@ -18,7 +18,8 @@
     {"src": "assets/icons/icon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable"},
     {"src": "assets/icons/icon-384x384.png", "sizes": "384x384", "type": "image/png", "purpose": "any maskable"},
     {"src": "assets/icons/icon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
-  ],
+  ]
+}
   "splash_pages": null,
   "display_override": ["standalone", "minimal-ui"],
   "categories": ["education", "health", "productivity"],
