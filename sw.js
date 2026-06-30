@@ -40,9 +40,6 @@ const ASSETS = [
   'https://cdn.jsdelivr.net/npm/chart.js'
 ];
 
-// ============================================
-// تثبيت Service Worker
-// ============================================
 self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -56,9 +53,6 @@ self.addEventListener('install', function(event) {
   );
 });
 
-// ============================================
-// تنشيط Service Worker
-// ============================================
 self.addEventListener('activate', function(event) {
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
@@ -76,9 +70,6 @@ self.addEventListener('activate', function(event) {
   );
 });
 
-// ============================================
-// التعامل مع الطلبات
-// ============================================
 self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
@@ -88,7 +79,6 @@ self.addEventListener('fetch', function(event) {
         }
         return fetch(event.request)
           .then(function(response) {
-            // حفظ الموارد الجديدة في الكاش
             if (event.request.url.includes('assets/') || 
                 event.request.url.includes('.html') ||
                 event.request.url.includes('manifest.json')) {
@@ -100,38 +90,10 @@ self.addEventListener('fetch', function(event) {
             return response;
           })
           .catch(function() {
-            // صفحة الخطأ عند عدم الاتصال
             if (event.request.url.includes('.html')) {
               return caches.match('/Training-workshop-registration/offline.html');
             }
           });
       })
-  );
-});
-
-// ============================================
-// التعامل مع Push Notifications (اختياري)
-// ============================================
-self.addEventListener('push', function(event) {
-  var data = event.data.json();
-  var options = {
-    body: data.body,
-    icon: '/Training-workshop-registration/assets/icons/icon-192x192.png',
-    badge: '/Training-workshop-registration/assets/icons/icon-96x96.png',
-    vibrate: [200, 100, 200],
-    data: {
-      url: data.url || '/Training-workshop-registration/'
-    }
-  };
-
-  event.waitUntil(
-    self.registration.showNotification(data.title, options)
-  );
-});
-
-self.addEventListener('notificationclick', function(event) {
-  event.notification.close();
-  event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/Training-workshop-registration/')
   );
 });
