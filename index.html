@@ -185,12 +185,12 @@
      ============================================ -->
 <script>
 // ============================================
-// 1. التأكد من تسجيل Service Worker
+// تسجيل Service Worker
 // ============================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/Training-workshop-registration/sw.js')  // ✅ أضف اسم المستودع
+    navigator.serviceWorker.register('/Training-workshop-registration/sw.js')
         .then(function(registration) {
-            console.log('✅ Service Worker مسجل بنجاح', registration);
+            console.log('✅ Service Worker مسجل بنجاح');
         })
         .catch(function(error) {
             console.log('❌ فشل تسجيل Service Worker:', error);
@@ -198,13 +198,14 @@ if ('serviceWorker' in navigator) {
 }
 
 // ============================================
-// 2. عرض نافذة التثبيت
+// عرض نافذة التثبيت
 // ============================================
 let deferredPrompt;
 
 window.addEventListener('beforeinstallprompt', function(e) {
     e.preventDefault();
     deferredPrompt = e;
+    console.log('📱 التطبيق جاهز للتثبيت');
     
     // عرض النافذة بعد 3 ثوانٍ
     setTimeout(function() {
@@ -222,9 +223,6 @@ window.addEventListener('beforeinstallprompt', function(e) {
     }, 3000);
 });
 
-// ============================================
-// 3. التحقق من التثبيت
-// ============================================
 window.addEventListener('appinstalled', function() {
     console.log('✅ تم تثبيت التطبيق بنجاح');
 });
