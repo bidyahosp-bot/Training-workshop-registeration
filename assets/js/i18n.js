@@ -143,8 +143,25 @@ const translations = {
         "all_rights": "جميع الحقوق محفوظة",
         "footer_tagline": "نتعلم اليوم... لنرعى أفضل غدًا",
         "footer_copyright": "© 2026 مستشفى بدية",
-        "footer_pwa": "تطبيق يعمل دون اتصال"
+        "footer_pwa": "تطبيق يعمل دون اتصال",
+        
+        // ============================================
+        // أقسام الموظفين - عربي
+        // ============================================
+        "select_department": "اختر القسم",
+        "dept_doctors": "👨‍⚕️ الأطباء",
+        "dept_nursing": "👩‍⚕️ التمريض",
+        "dept_dressing": "🩹 التضميد",
+        "dept_pharmacy": "💊 الصيدلة",
+        "dept_radiology": "📷 الأشعة",
+        "dept_dentistry": "🦷 الأسنان",
+        "dept_laboratory": "🔬 المختبر",
+        "dept_medical_records": "📋 السجلات الطبية",
+        "dept_administration": "📊 الإدارة",
+        "dept_health_education": "📚 التثقيف الصحي",
+        "dept_nutrition": "🍎 التغذية"
     },
+    
     en: {
         // Navigation
         "app_name": "Bidiya Hospital Training & Professional Development Platform",
@@ -285,7 +302,23 @@ const translations = {
         "all_rights": "All Rights Reserved",
         "footer_tagline": "Learning Today, Caring Better Tomorrow",
         "footer_copyright": "© 2026 Bidiya Hospital",
-        "footer_pwa": "Offline-capable App"
+        "footer_pwa": "Offline-capable App",
+        
+        // ============================================
+        // Employee Departments - English
+        // ============================================
+        "select_department": "Select Department",
+        "dept_doctors": "👨‍⚕️ Doctors",
+        "dept_nursing": "👩‍⚕️ Nursing",
+        "dept_dressing": "🩹 Dressing",
+        "dept_pharmacy": "💊 Pharmacy",
+        "dept_radiology": "📷 Radiology",
+        "dept_dentistry": "🦷 Dentistry",
+        "dept_laboratory": "🔬 Laboratory",
+        "dept_medical_records": "📋 Medical Records",
+        "dept_administration": "📊 Administration",
+        "dept_health_education": "📚 Health Education",
+        "dept_nutrition": "🍎 Nutrition"
     }
 };
 
@@ -329,14 +362,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     updateUI();
 });
+
 // ============================================
-// ترجمة الأقسام
+// دالة ترجمة الأقسام (للاستخدام في JavaScript)
 // ============================================
 function translateDepartment(deptName, lang) {
     lang = lang || currentLang || 'ar';
     
-    const deptTranslations = {
-        ar: {
+    const deptMap = {
+        'ar': {
             'الأطباء': 'الأطباء',
             'التمريض': 'التمريض',
             'التضميد': 'التضميد',
@@ -347,13 +381,9 @@ function translateDepartment(deptName, lang) {
             'السجلات الطبية': 'السجلات الطبية',
             'الإدارة': 'الإدارة',
             'التثقيف الصحي': 'التثقيف الصحي',
-            'التغذية': 'التغذية',
-            'الموارد البشرية': 'الموارد البشرية',
-            'الجودة': 'الجودة',
-            'السلامة': 'السلامة',
-            'الصيانة': 'الصيانة'
+            'التغذية': 'التغذية'
         },
-        en: {
+        'en': {
             'الأطباء': 'Doctors',
             'التمريض': 'Nursing',
             'التضميد': 'Dressing',
@@ -364,33 +394,9 @@ function translateDepartment(deptName, lang) {
             'السجلات الطبية': 'Medical Records',
             'الإدارة': 'Administration',
             'التثقيف الصحي': 'Health Education',
-            'التغذية': 'Nutrition',
-            'الموارد البشرية': 'Human Resources',
-            'الجودة': 'Quality',
-            'السلامة': 'Safety',
-            'الصيانة': 'Maintenance'
+            'التغذية': 'Nutrition'
         }
     };
     
-    return deptTranslations[lang]?.[deptName] || deptName;
+    return deptMap[lang]?.[deptName] || deptName;
 }
-
-// دالة لتحديث ترجمة الأقسام في كل الصفحات
-function translateAllDepartments() {
-    document.querySelectorAll('[data-dept]').forEach(function(el) {
-        const deptName = el.getAttribute('data-dept');
-        if (deptName) {
-            el.textContent = translateDepartment(deptName);
-        }
-    });
-}
-
-// استدعاء عند تغيير اللغة
-document.addEventListener('DOMContentLoaded', function() {
-    // إضافة استماع لتغيير اللغة
-    document.querySelectorAll('.lang-btn').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            setTimeout(translateAllDepartments, 100);
-        });
-    });
-});
