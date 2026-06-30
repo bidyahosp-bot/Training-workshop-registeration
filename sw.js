@@ -102,7 +102,7 @@ self.addEventListener('fetch', function(event) {
           .catch(function() {
             // صفحة الخطأ عند عدم الاتصال
             if (event.request.url.includes('.html')) {
-              return caches.match('/offline.html');
+              return caches.match('/Training-workshop-registration/offline.html');
             }
           });
       })
@@ -116,14 +116,14 @@ self.addEventListener('push', function(event) {
   var data = event.data.json();
   var options = {
     body: data.body,
-    icon: 'assets/icons/icon-192x192.png',
-    badge: 'assets/icons/icon-96x96.png',
+    icon: '/Training-workshop-registration/assets/icons/icon-192x192.png',
+    badge: '/Training-workshop-registration/assets/icons/icon-96x96.png',
     vibrate: [200, 100, 200],
     data: {
-      url: data.url || '/'
+      url: data.url || '/Training-workshop-registration/'
     }
   };
-  
+
   event.waitUntil(
     self.registration.showNotification(data.title, options)
   );
@@ -132,6 +132,6 @@ self.addEventListener('push', function(event) {
 self.addEventListener('notificationclick', function(event) {
   event.notification.close();
   event.waitUntil(
-    clients.openWindow(event.notification.data.url || '/')
+    clients.openWindow(event.notification.data.url || '/Training-workshop-registration/')
   );
 });
