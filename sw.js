@@ -5,6 +5,9 @@
 const CACHE_NAME = 'bth-cache-v3.0';
 const ASSETS = [
   '/',
+   '/Training-workshop-registration/',  // ✅ أضف اسم المستودع
+  '/Training-workshop-registration/index.html',
+  '/Training-workshop-registration/dashboard.html',
   '/index.html',
   '/dashboard.html',
   '/workshops.html',
