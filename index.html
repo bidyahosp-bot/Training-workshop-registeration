@@ -6,7 +6,7 @@
     <title>Bidiya Hospital Training Hub</title>
     
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="/Training-workshop-registration/manifest.json">  // ✅ أضف اسم المستودع
     <meta name="theme-color" content="#1a7a3a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     
@@ -18,7 +18,7 @@
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/dark-mode.css">
     <!-- PWA Meta Tags -->
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/Training-workshop-registration/manifest.json">  // ✅ أضف اسم المستودع
 <meta name="theme-color" content="#1a7a3a">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -188,9 +188,9 @@
 // 1. التأكد من تسجيل Service Worker
 // ============================================
 if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/sw.js')
+    navigator.serviceWorker.register('/Training-workshop-registration/sw.js')  // ✅ أضف اسم المستودع
         .then(function(registration) {
-            console.log('✅ Service Worker مسجل بنجاح');
+            console.log('✅ Service Worker مسجل بنجاح', registration);
         })
         .catch(function(error) {
             console.log('❌ فشل تسجيل Service Worker:', error);
