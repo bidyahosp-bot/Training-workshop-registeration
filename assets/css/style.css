@@ -2358,3 +2358,297 @@ body.dark-mode .contact-item:hover {
     display: none;
   }
 }
+/* ============================================
+   تحسين التنسيق العام والألوان
+   ============================================ */
+
+/* ========== تحسين النصوص في الوضع العادي ========== */
+body {
+    color: #1a1a2e;
+    background: #f0f4f8;
+}
+
+/* ========== تحسين النصوص في الوضع المظلم ========== */
+body.dark-mode {
+    color: #e6edf3;
+    background: #0d1117;
+}
+
+/* ========== الأرقام والإحصائيات ========== */
+.counter-number {
+    color: #1a7a3a !important;
+    font-weight: 900 !important;
+    font-size: 2.2rem !important;
+}
+
+body.dark-mode .counter-number {
+    color: #4fc3a0 !important;
+}
+
+.counter-label {
+    color: #4a4a6a !important;
+    font-weight: 600 !important;
+}
+
+body.dark-mode .counter-label {
+    color: #b0c4de !important;
+}
+
+/* ========== البطاقات ========== */
+.action-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(26, 122, 58, 0.1) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06) !important;
+}
+
+body.dark-mode .action-card {
+    background: #161b22 !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.action-card h3 {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .action-card h3 {
+    color: #e6edf3 !important;
+}
+
+.action-card p {
+    color: #4a4a6a !important;
+}
+
+body.dark-mode .action-card p {
+    color: #b0c4de !important;
+}
+
+/* ========== الإحصائيات السريعة ========== */
+.stat-badge {
+    background: #ffffff !important;
+    color: #4a4a6a !important;
+    border: 1px solid rgba(26, 122, 58, 0.08) !important;
+}
+
+body.dark-mode .stat-badge {
+    background: #161b22 !important;
+    color: #b0c4de !important;
+}
+
+.stat-badge strong {
+    color: #1a1a2e !important;
+}
+
+body.dark-mode .stat-badge strong {
+    color: #e6edf3 !important;
+}
+
+/* ========== البطاقات في لوحة الشرف ========== */
+.kpi-card {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.06) !important;
+    border: 1px solid rgba(26, 122, 58, 0.06) !important;
+}
+
+body.dark-mode .kpi-card {
+    background: #161b22 !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.kpi-number {
+    color: #1a7a3a !important;
+    font-weight: 900 !important;
+    font-size: 2rem !important;
+}
+
+body.dark-mode .kpi-number {
+    color: #4fc3a0 !important;
+}
+
+.kpi-label {
+    color: #4a4a6a !important;
+    font-weight: 600 !important;
+}
+
+body.dark-mode .kpi-label {
+    color: #b0c4de !important;
+}
+
+/* ========== الجداول ========== */
+.workshops-table th {
+    background: #1a7a3a !important;
+    color: #ffffff !important;
+    padding: 12px 16px !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .workshops-table th {
+    background: #0d2818 !important;
+}
+
+.workshops-table td {
+    color: #1a1a2e !important;
+    padding: 10px 16px !important;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05) !important;
+}
+
+body.dark-mode .workshops-table td {
+    color: #c0d0e0 !important;
+    border-bottom-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.workshops-table tr:hover td {
+    background: rgba(26, 122, 58, 0.05) !important;
+}
+
+body.dark-mode .workshops-table tr:hover td {
+    background: rgba(255, 255, 255, 0.03) !important;
+}
+
+/* ========== الحقول والنماذج ========== */
+.form-group label {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .form-group label {
+    color: #e6edf3 !important;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    background: #ffffff !important;
+    color: #1a1a2e !important;
+    border: 2px solid #e0e4e8 !important;
+    border-radius: 10px !important;
+    padding: 12px 16px !important;
+    font-size: 1rem !important;
+}
+
+body.dark-mode .form-group input,
+body.dark-mode .form-group select,
+body.dark-mode .form-group textarea {
+    background: #0d1117 !important;
+    color: #e6edf3 !important;
+    border-color: #30363d !important;
+}
+
+.form-group input:focus,
+.form-group select:focus {
+    border-color: #1a7a3a !important;
+    outline: none !important;
+    box-shadow: 0 0 0 3px rgba(26, 122, 58, 0.15) !important;
+}
+
+/* ========== أزرار ========== */
+.btn-primary {
+    background: #1a7a3a !important;
+    color: #ffffff !important;
+    border: none !important;
+    padding: 12px 28px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+    transition: all 0.3s ease !important;
+}
+
+.btn-primary:hover {
+    background: #0f5a2a !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 4px 15px rgba(26, 122, 58, 0.3) !important;
+}
+
+.btn-secondary {
+    background: #e8ecf1 !important;
+    color: #1a1a2e !important;
+    border: none !important;
+    padding: 12px 28px !important;
+    border-radius: 10px !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .btn-secondary {
+    background: #21262d !important;
+    color: #e6edf3 !important;
+}
+
+/* ========== عناوين الصفحات ========== */
+.page-header h1 {
+    color: #1a1a2e !important;
+    font-weight: 800 !important;
+}
+
+body.dark-mode .page-header h1 {
+    color: #e6edf3 !important;
+}
+
+.page-header p {
+    color: #4a4a6a !important;
+}
+
+body.dark-mode .page-header p {
+    color: #b0c4de !important;
+}
+
+/* ========== بطاقات الموظفين ========== */
+.employee-card {
+    background: #ffffff !important;
+    border: 1px solid rgba(26, 122, 58, 0.06) !important;
+    border-radius: 12px !important;
+    padding: 16px !important;
+}
+
+body.dark-mode .employee-card {
+    background: #161b22 !important;
+}
+
+.employee-card .emp-name {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .employee-card .emp-name {
+    color: #e6edf3 !important;
+}
+
+/* ========== المنصة (Podium) ========== */
+.podium-item {
+    background: #ffffff !important;
+    border-radius: 16px !important;
+    padding: 20px !important;
+    border: 2px solid rgba(26, 122, 58, 0.1) !important;
+}
+
+body.dark-mode .podium-item {
+    background: #161b22 !important;
+}
+
+.podium-item .podium-name {
+    color: #1a1a2e !important;
+    font-weight: 700 !important;
+}
+
+body.dark-mode .podium-item .podium-name {
+    color: #e6edf3 !important;
+}
+
+/* ========== تحسين رؤية النصوص في الخلفية ========== */
+.hero h2 {
+    color: #1a7a3a !important;
+    text-shadow: 0 2px 4px rgba(255, 255, 255, 0.5) !important;
+}
+
+body.dark-mode .hero h2 {
+    color: #4fc3a0 !important;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5) !important;
+}
+
+.hero p {
+    color: #2a4a3a !important;
+}
+
+body.dark-mode .hero p {
+    color: #b0c4de !important;
+}
