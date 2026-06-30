@@ -2358,3 +2358,271 @@ body.dark-mode .contact-item:hover {
     display: none;
   }
 }
+/* ============================================
+   تحسينات للهواتف
+   ============================================ */
+
+/* تحسين الجداول على الهواتف */
+@media (max-width: 768px) {
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .workshops-table {
+        font-size: 0.75rem;
+        min-width: 600px;
+    }
+    
+    .workshops-table th,
+    .workshops-table td {
+        padding: 8px 6px;
+        white-space: nowrap;
+    }
+    
+    .workshops-table td:last-child {
+        white-space: normal;
+    }
+    
+    /* تحسين البطاقات */
+    .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+    
+    .kpi-card {
+        padding: 12px;
+    }
+    
+    .kpi-number {
+        font-size: 1.2rem;
+    }
+    
+    .kpi-label {
+        font-size: 0.6rem;
+    }
+    
+    /* تحسين النماذج */
+    .form-row {
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .form-group {
+        margin-bottom: 12px;
+    }
+    
+    .register-card {
+        padding: 15px;
+    }
+    
+    /* تحسين الهيدر */
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 10px 0;
+    }
+    
+    .logo {
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+    
+    .logo-title {
+        font-size: 0.9rem;
+    }
+    
+    .logo-tagline {
+        font-size: 0.7rem;
+    }
+    
+    .main-nav {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 4px;
+    }
+    
+    .main-nav a {
+        font-size: 0.7rem;
+        padding: 4px 8px;
+    }
+    
+    /* تحسين الصفحة الرئيسية */
+    .hero-counters {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .counter-item {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+    
+    .action-card {
+        padding: 15px;
+    }
+    
+    .action-card h3 {
+        font-size: 0.8rem;
+    }
+    
+    .action-card p {
+        font-size: 0.65rem;
+    }
+    
+    /* تحسين نافذة التثبيت */
+    .install-banner {
+        width: 95%;
+        bottom: 10px;
+        padding: 12px 15px;
+    }
+    
+    .install-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .install-text h3 {
+        font-size: 0.85rem;
+    }
+    
+    .install-text p {
+        font-size: 0.7rem;
+    }
+    
+    .btn-install {
+        padding: 6px 12px;
+        font-size: 0.75rem;
+    }
+    
+    /* تحسين الفوتر */
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+    
+    .footer-developer {
+        justify-content: center;
+    }
+    
+    .dev-social {
+        justify-content: center;
+    }
+}
+
+/* تحسينات للشاشات الصغيرة جداً */
+@media (max-width: 480px) {
+    .kpi-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    
+    .kpi-card {
+        padding: 8px;
+    }
+    
+    .kpi-icon {
+        font-size: 1.2rem;
+    }
+    
+    .kpi-number {
+        font-size: 1rem;
+    }
+    
+    .actions-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+    
+    .action-card {
+        padding: 10px;
+    }
+    
+    .action-card i {
+        font-size: 1.2rem;
+    }
+    
+    .page-header h1 {
+        font-size: 1.2rem;
+    }
+    
+    .page-header p {
+        font-size: 0.75rem;
+    }
+    
+    /* إخفاء بعض العناصر غير الضرورية على الهواتف الصغيرة */
+    .logo-img {
+        width: 30px;
+        height: 30px;
+    }
+}
+
+/* تحسين شريط التمرير في الجداول */
+.table-container::-webkit-scrollbar {
+    height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: var(--bg-secondary);
+    border-radius: 3px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: var(--primary);
+    border-radius: 3px;
+}
+
+/* تحسين الأزرار على الهواتف */
+@media (max-width: 768px) {
+    .btn-primary,
+    .btn-secondary,
+    .btn-install,
+    .btn-export,
+    .btn-clear {
+        padding: 8px 14px;
+        font-size: 0.75rem;
+        min-height: 40px;
+    }
+    
+    .form-actions {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .form-actions .btn-primary,
+    .form-actions .btn-secondary {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+/* تحسين البحث على الهواتف */
+@media (max-width: 768px) {
+    .search-section {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .search-box {
+        width: 100%;
+    }
+    
+    .filters {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+    
+    .filters select {
+        flex: 1;
+        min-width: 80px;
+        font-size: 0.7rem;
+        padding: 6px 8px;
+    }
+}
