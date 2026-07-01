@@ -260,3 +260,65 @@ if (typeof module !== 'undefined' && module.exports) {
         db
     };
 }
+// ============================================
+// دوال إضافية للتحديث الفوري
+// ============================================
+
+// ✅ إضافة ورشة جديدة وإرسال إشارة تحديث
+async function addWorkshopLocal(workshop) {
+    try {
+        workshop.timestamp = workshop.timestamp || new Date().toISOString();
+        workshop.synced = false;
+        
+        // استخدام workshopTitle بدلاً من workshop
+        if (!workshop.workshopTitle && workshop.workshop) {
+            workshop.workshopTitle = workshop.workshop;
+        }
+        if (!workshop.employeeName && workshop.employee) {
+            workshop.employeeName = workshop.employee;
+        }
+        
+        const id = await db.workshops.add(workshop);
+        console.log('✅ تم حفظ الورشة محلياً:', id);
+        
+        // تحديث إحصائيات الموظف
+        await updateEmployeeStats(workshop.employeeId);
+        
+        // ✅ إرسال إشارة تحديث للصفحات الأخرى
+        broadcastUpdate();
+        
+        return { success: true, id: id };
+    } catch (error) {
+        console.error('❌ خطأ في حفظ الورشة:', error);
+        return { success: false, error: error.message };
+    }
+}
+
+// ✅ إرسال إشارة تحديث
+function broadcastUpdate() {
+    try {
+        // تخزين في localStorage لإعلام الصفحات الأخرى
+        localStorage.setItem('bth_workshops_updated', Date.now().toString());
+        
+        // إرسال حدث مخصص
+        const event = new CustomEvent('workshopsUpdated');
+        document.dispatchEvent(event);
+        
+        console.log('📡 تم إرسال إشارة تحديث');
+    } catch (error) {
+        console.warn('⚠️ خطأ في إرسال إشارة التحديث:', error);
+    }
+}
+
+// ✅ حذف ورشة (للمشرفين)
+async function deleteWorkshopLocal(id) {
+    try {
+        await db.workshops.delete(id);
+        console.log('🗑️ تم حذف الورشة:', id);
+        broadcastUpdate();
+        return { success: true };
+    } catch (error) {
+        console.error('❌ خطأ في حذف الورشة:', error);
+        return { success: false, error: error.message };
+    }
+}
