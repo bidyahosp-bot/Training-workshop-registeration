@@ -5,64 +5,71 @@
 // 🔗 API URL - تأكد من صحة الرابط
 const API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTOyl_vdUwzDvqVUhgJ7TpH2qo59NHYgvXbdp2nVptsFTuHdGhKOX-5c9Hb1FTwGmPPFiUM87hP0hiuQFbkeGjqOiXMsCuUup8ZzBAwaDZVomxRcl8vLXZFdaJr2ei7JPMP0oCDpLkOyf4RGsBtNKJUQwa7ZBVyEJIEdU2pMbaaoHr3DKJ_2rP8tzl5SrhjURH0x32ExZcvumkJ90CCsHCl4UJhlaoHGGd2ELFg-eXWl_njhpdwxzf3IvX7PTbbFnxyXtQNpZFSODEVVW2pCLLqjgdjjw&lib=MxvoKb8cGSRuqCGbK6pgVcBMD4LCh1O-7';
 
-let dbInitialized = false;
-
 // ============================================
-// تهيئة النظام
+// تهيئة النظام - نسخة بسيطة وآمنة
 // ============================================
 async function initApp() {
     console.log('🚀 بدء تهيئة التطبيق...');
-    showLoadingMessage('جاري تحميل البيانات...');
 
+    // 1. محاولة تحميل البيانات من IndexedDB
+    let localDataExists = false;
     try {
-        // محاولة تهيئة قاعدة البيانات
-        const result = await initializeDatabase();
-        
-        if (result.success) {
-            dbInitialized = true;
-            console.log('✅ تم تهيئة قاعدة البيانات بنجاح');
-            
-            // محاولة المزامنة في الخلفية
-            if (navigator.onLine) {
-                syncWithServer().then(syncResult => {
-                    if (syncResult.success && syncResult.synced > 0) {
-                        console.log('✅ تمت المزامنة:', syncResult.synced, 'ورشة');
-                        refreshAllPages();
-                    }
-                }).catch(err => {
-                    console.warn('⚠️ فشلت المزامنة الخلفية:', err);
-                });
-            }
-            
-            // تحديث الواجهة فوراً
-            refreshAllPages();
+        const count = await db.workshops.count();
+        if (count > 0) {
+            localDataExists = true;
+            console.log('✅ البيانات موجودة محلياً:', count, 'ورشة');
         } else {
-            // إذا فشلت التهيئة، نحاول عرض البيانات المحلية إن وجدت
-            console.warn('⚠️ فشل التهيئة، محاولة عرض البيانات المحلية');
-            const count = await db.workshops.count();
-            if (count > 0) {
-                refreshAllPages();
-                showNotification('تم تحميل البيانات المحلية', 'warning');
-            } else {
-                showErrorMessage('فشل تحميل البيانات. يرجى التحقق من الاتصال بالإنترنت.');
-            }
+            console.log('ℹ️ لا توجد بيانات محلية.');
         }
     } catch (error) {
-        console.error('❌ خطأ في التهيئة:', error);
-        // محاولة عرض البيانات المحلية
+        console.warn('⚠️ خطأ في قراءة البيانات المحلية:', error);
+    }
+
+    // 2. إذا لم توجد بيانات محلية، حاول جلبها من الخادم
+    if (!localDataExists) {
         try {
-            const count = await db.workshops.count();
-            if (count > 0) {
-                refreshAllPages();
-                showNotification('تم تحميل البيانات المحلية مؤقتًا', 'warning');
+            console.log('📡 جلب البيانات من الخادم...');
+            const response = await fetch(API_URL);
+            if (response.ok) {
+                const result = await response.json();
+                if (result.status === 'success' && result.data) {
+                    const data = result.data;
+                    // حفظ في IndexedDB
+                    if (data.allWorkshops && data.allWorkshops.length > 0) {
+                        await db.workshops.bulkAdd(data.allWorkshops);
+                        console.log('✅ تم حفظ', data.allWorkshops.length, 'ورشة من الخادم.');
+                    }
+                    if (data.allEmployees && data.allEmployees.length > 0) {
+                        await db.employees.bulkAdd(data.allEmployees);
+                        console.log('✅ تم حفظ', data.allEmployees.length, 'موظف من الخادم.');
+                    }
+                    localDataExists = true;
+                } else {
+                    console.warn('⚠️ الخادم أعاد حالة غير ناجحة:', result.message);
+                }
             } else {
-                showErrorMessage('حدث خطأ في تهيئة النظام. يرجى تحديث الصفحة.');
+                console.warn('⚠️ فشل الاتصال بالخادم:', response.status);
             }
-        } catch {
-            showErrorMessage('حدث خطأ غير متوقع. يرجى تحديث الصفحة.');
+        } catch (error) {
+            console.error('❌ خطأ في جلب البيانات من الخادم:', error);
+            // نستمر، ربما المستخدم غير متصل.
         }
-    } finally {
-        hideLoadingMessage();
+    }
+
+    // 3. تحديث الواجهة (حتى لو كانت فارغة)
+    try {
+        refreshAllPages();
+        console.log('✅ تم تحديث الواجهة.');
+    } catch (error) {
+        console.warn('⚠️ خطأ في تحديث الواجهة:', error);
+    }
+
+    // 4. إخفاء شاشة التحميل (إذا كانت موجودة)
+    hideLoadingMessage();
+
+    // 5. إذا لم توجد بيانات، اعرض رسالة للمستخدم
+    if (!localDataExists) {
+        showNotification('⚠️ لا توجد بيانات لعرضها. تأكد من الاتصال بالإنترنت وحاول تحديث الصفحة.', 'warning');
     }
 }
 
@@ -71,7 +78,6 @@ async function initApp() {
 // ============================================
 function refreshAllPages() {
     console.log('🔄 تحديث جميع الصفحات...');
-    
     try {
         if (typeof loadHomePageData === 'function') loadHomePageData();
         if (typeof loadDashboardData === 'function') loadDashboardData();
@@ -91,39 +97,29 @@ async function loadHomePageData() {
     try {
         const workshops = await getAllWorkshopsLocal();
         const employees = await getAllEmployeesLocal();
-        
+
         const totalWorkshops = workshops.length;
         const totalHours = workshops.reduce((sum, w) => sum + (w.hours || 0), 0);
         const totalEmployees = employees.length;
-        
+
         const el1 = document.getElementById('totalWorkshops');
         const el2 = document.getElementById('totalHours');
         const el3 = document.getElementById('totalEmployees');
-        
         if (el1) el1.textContent = totalWorkshops;
         if (el2) el2.textContent = totalHours.toFixed(1);
         if (el3) el3.textContent = totalEmployees;
-        
-        // أفضل موظف
+
         const topEmployees = await getTopEmployeesLocal(1);
         const topEl = document.getElementById('topEmployee');
         if (topEl) {
-            if (topEmployees && topEmployees.length > 0) {
-                topEl.textContent = topEmployees[0].name + ' (' + topEmployees[0].workshops + ' ورشة)';
-            } else {
-                topEl.textContent = '-';
-            }
+            topEl.textContent = (topEmployees && topEmployees.length > 0) ? 
+                `${topEmployees[0].name} (${topEmployees[0].workshops} ورشة)` : '-';
         }
-        
-        // آخر تسجيل
+
         const lastEl = document.getElementById('lastEmployee');
         if (lastEl) {
             if (workshops && workshops.length > 0) {
-                const sorted = [...workshops].sort((a, b) => {
-                    const da = new Date(a.timestamp || a.date || 0);
-                    const db = new Date(b.timestamp || b.date || 0);
-                    return db - da;
-                });
+                const sorted = [...workshops].sort((a, b) => new Date(b.timestamp || b.date || 0) - new Date(a.timestamp || a.date || 0));
                 lastEl.textContent = sorted[0]?.employeeName || sorted[0]?.employee || '-';
             } else {
                 lastEl.textContent = '-';
@@ -143,19 +139,10 @@ function showLoadingMessage(message) {
         loader = document.createElement('div');
         loader.id = 'appLoader';
         loader.style.cssText = `
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(8px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 999999;
-            transition: opacity 0.5s ease;
+            position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 999999; transition: opacity 0.5s ease;
         `;
         loader.innerHTML = `
             <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 350px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
@@ -180,18 +167,10 @@ function showErrorMessage(message) {
     hideLoadingMessage();
     const errorDiv = document.createElement('div');
     errorDiv.style.cssText = `
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        background: var(--bg-card);
-        padding: 30px;
-        border-radius: 20px;
-        box-shadow: var(--shadow-lg);
-        max-width: 400px;
-        text-align: center;
-        z-index: 999999;
-        border: 2px solid #e74c3c;
+        position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+        background: var(--bg-card); padding: 30px; border-radius: 20px;
+        box-shadow: var(--shadow-lg); max-width: 400px; text-align: center;
+        z-index: 999999; border: 2px solid #e74c3c;
     `;
     errorDiv.innerHTML = `
         <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
@@ -205,36 +184,18 @@ function showErrorMessage(message) {
 }
 
 function showNotification(message, type = 'info') {
-    const colors = {
-        success: '#27ae60',
-        error: '#e74c3c',
-        info: '#3498db',
-        warning: '#f39c12'
-    };
-    
+    const colors = { success: '#27ae60', error: '#e74c3c', info: '#3498db', warning: '#f39c12' };
     const notif = document.createElement('div');
     notif.style.cssText = `
-        position: fixed;
-        bottom: 90px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: ${colors[type] || colors.info};
-        color: white;
-        padding: 14px 28px;
-        border-radius: 14px;
-        box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        z-index: 999999;
-        font-weight: 600;
-        font-size: 0.95rem;
-        animation: slideUp 0.4s ease;
-        max-width: 90%;
-        text-align: center;
-        font-family: var(--font, 'Cairo', sans-serif);
-        direction: rtl;
+        position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+        background: ${colors[type] || colors.info}; color: white;
+        padding: 14px 28px; border-radius: 14px; box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        z-index: 999999; font-weight: 600; font-size: 0.95rem;
+        animation: slideUp 0.4s ease; max-width: 90%; text-align: center;
+        font-family: var(--font, 'Cairo', sans-serif); direction: rtl;
     `;
     notif.textContent = message;
     document.body.appendChild(notif);
-    
     setTimeout(() => {
         notif.style.opacity = '0';
         notif.style.transition = 'opacity 0.5s ease';
@@ -260,14 +221,8 @@ function formatDate(dateString) {
     try {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) return '-';
-        return date.toLocaleDateString('ar-SA', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    } catch {
-        return '-';
-    }
+        return date.toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch { return '-'; }
 }
 
 // ============================================
@@ -275,8 +230,7 @@ function formatDate(dateString) {
 // ============================================
 window.addEventListener('online', function() {
     console.log('🌐 تم استعادة الاتصال بالإنترنت');
-    showNotification('🌐 جاري المزامنة مع الخادم...', 'info');
-    
+    showNotification('🌐 جاري المزامنة...', 'info');
     syncWithServer().then(result => {
         if (result.success && result.synced > 0) {
             showNotification('✅ تمت مزامنة ' + result.synced + ' ورشة', 'success');
@@ -294,14 +248,9 @@ window.addEventListener('offline', function() {
 // الاستماع لتحديثات البيانات
 // ============================================
 window.addEventListener('storage', function(e) {
-    if (e.key === 'bth_workshops_updated') {
-        console.log('🔄 تم تحديث البيانات من صفحة أخرى');
-        refreshAllPages();
-    }
+    if (e.key === 'bth_workshops_updated') refreshAllPages();
 });
-
 document.addEventListener('workshopsUpdated', function() {
-    console.log('🔄 تم تحديث البيانات');
     refreshAllPages();
 });
 
@@ -315,7 +264,6 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.add('dark-mode');
             toggle.innerHTML = '<i class="fas fa-sun"></i>';
         }
-        
         toggle.addEventListener('click', function() {
             document.body.classList.toggle('dark-mode');
             const isDark = document.body.classList.contains('dark-mode');
@@ -323,7 +271,6 @@ document.addEventListener('DOMContentLoaded', function() {
             toggle.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
         });
     }
-    
     // تهيئة التطبيق
     initApp();
 });
