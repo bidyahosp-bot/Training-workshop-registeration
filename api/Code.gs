@@ -2,7 +2,52 @@
 // Bidiya Hospital Training Hub - API
 // Developed by JOUHARAH.IT
 // ============================================
+// ============================================
+// دالة المزامنة الجماعية
+// ============================================
 
+function syncWorkshops(data) {
+    try {
+        var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("Form Responses 1");
+        if (!sheet) {
+            var ss = SpreadsheetApp.getActiveSpreadsheet();
+            sheet = ss.insertSheet("Form Responses 1");
+            var headers = ['الطابع الزمني', 'الرقم الوظيفي', 'اسم الموظف', 'القسم', 'عنوان الورشة', 'عدد الساعات', 'الجهة المنظمة', 'شهادة حضور', 'تاريخ الورشة'];
+            sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+        }
+        
+        // إضافة جميع الورش الجديدة
+        var addedCount = 0;
+        for (var i = 0; i < data.length; i++) {
+            var w = data[i];
+            var row = [
+                w.timestamp || new Date(),
+                w.employeeId || '',
+                w.employeeName || '',
+                w.department || '',
+                w.workshopTitle || '',
+                w.hours || 0,
+                w.organizer || '',
+                w.certificate || 'لا',
+                w.workshopDate || ''
+            ];
+            sheet.appendRow(row);
+            addedCount++;
+        }
+        
+        return {
+            status: 'success',
+            message: 'تمت المزامنة بنجاح',
+            added: addedCount
+        };
+        
+    } catch (error) {
+        return {
+            status: 'error',
+            message: error.toString()
+        };
+    }
+}
 function doGet() {
     try {
         const data = getDashboardData();
