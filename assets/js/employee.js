@@ -1,7 +1,35 @@
 // ============================================
 // Employee JavaScript - Bidiya Training Hub
 // ============================================
+// ============================================
+// Employee - استخدام البيانات المحلية
+// ============================================
 
+async function loadEmployeeData() {
+    try {
+        // ✅ جلب البيانات من قاعدة البيانات المحلية
+        const employees = await getAllEmployeesLocal();
+        
+        if (employees.length === 0) {
+            showEmployeeError('لا توجد بيانات موظفين');
+            return;
+        }
+        
+        allEmployees = employees;
+        allWorkshops = await getAllWorkshopsLocal();
+        
+        renderEmployeeList(allEmployees);
+        
+    } catch (error) {
+        console.error('Error loading employee data:', error);
+        showEmployeeError('حدث خطأ في تحميل البيانات');
+    }
+}
+
+// تحديث دالة viewEmployeeProfile لاستخدام البيانات المحلية
+function viewEmployeeProfile(id) {
+    // ... الكود الموجود مع تعديل البحث في allEmployees ...
+}
 let allEmployees = [];
 let allWorkshops = [];
 
