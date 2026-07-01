@@ -1,7 +1,81 @@
 // ============================================
 // Dashboard JavaScript - Bidiya Training Hub
 // ============================================
+// ============================================
+// Dashboard - استخدام البيانات المحلية
+// ============================================
 
+async function loadDashboardData() {
+    try {
+        // ✅ جلب البيانات من قاعدة البيانات المحلية
+        const workshops = await getAllWorkshopsLocal();
+        const employees = await getAllEmployeesLocal();
+        const topEmployees = await getTopEmployeesLocal(3);
+        
+        if (workshops.length === 0 && employees.length === 0) {
+            showDashboardError('لا توجد بيانات. يرجى الاتصال بالإنترنت لتحميل البيانات.');
+            return;
+        }
+        
+        // تحديث KPIs
+        const totalHours = workshops.reduce((sum, w) => sum + (w.hours || 0), 0);
+        const monthlyWorkshops = workshops.filter(w => {
+            const d = new Date(w.timestamp || w.date);
+            const now = new Date();
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+        
+        document.getElementById('kpiTotalWorkshops').textContent = workshops.length;
+        document.getElementById('kpiTotalHours').textContent = totalHours.toFixed(1);
+        document.getElementById('kpiTotalEmployees').textContent = employees.length;
+        document.getElementById('kpiMonthly').textContent = monthlyWorkshops;
+        document.getElementById('kpiAvgHours').textContent = employees.length > 0 ? 
+            (totalHours / employees.length).toFixed(1) : 0;
+        
+        // أفضل الموظفين
+        renderTopEmployees(topEmployees);
+        
+        // أفضل الأقسام
+        const departments = getDepartmentsStats(employees);
+        renderTopDepartments(departments);
+        
+        // آخر ورشة
+        const lastWorkshop = workshops.length > 0 ? workshops[workshops.length - 1] : null;
+        renderLatestWorkshop(lastWorkshop);
+        
+        // النشاط الأخير
+        const recent = workshops.slice(-10).reverse();
+        renderRecentActivity(recent);
+        
+        document.getElementById('lastUpdated').textContent = new Date().toLocaleString('ar-SA');
+        
+    } catch (error) {
+        console.error('Error loading dashboard:', error);
+        showDashboardError('حدث خطأ في تحميل البيانات');
+    }
+}
+
+// ✅ حساب إحصائيات الأقسام
+function getDepartmentsStats(employees) {
+    const deptMap = {};
+    employees.forEach(emp => {
+        if (!deptMap[emp.department]) {
+            deptMap[emp.department] = {
+                name: emp.department,
+                workshops: 0,
+                totalHours: 0,
+                employees: 0
+            };
+        }
+        deptMap[emp.department].workshops += emp.workshops || 0;
+        deptMap[emp.department].totalHours += emp.totalHours || 0;
+        deptMap[emp.department].employees += 1;
+    });
+    
+    return Object.values(deptMap)
+        .sort((a, b) => b.workshops - a.workshops)
+        .slice(0, 5);
+}
 // ============================================
 // تحميل بيانات لوحة الشرف
 // ============================================
