@@ -236,5 +236,22 @@ window.addEventListener('offline', function() {
     console.log('📴 تم فقدان الاتصال بالإنترنت');
     showNotification('📴 أنت غير متصل. سيتم حفظ البيانات محلياً.', 'warning');
 });
+// في نهاية دالة addWorkshopLocal، أضف استدعاء broadcastUpdate
+// أو استخدم الكود التالي في register.js بعد الحفظ المحلي:
+
+// بعد حفظ الورشة محلياً
+if (localResult.success) {
+    // ... الكود الموجود ...
+    
+    // ✅ إرسال إشارة تحديث لجميع الصفحات
+    try {
+        localStorage.setItem('bth_workshops_updated', Date.now().toString());
+        const event = new CustomEvent('workshopsUpdated');
+        document.dispatchEvent(event);
+        console.log('📡 تم إرسال إشارة تحديث');
+    } catch (e) {
+        console.warn('⚠️ خطأ في إرسال إشارة التحديث:', e);
+    }
+}
 
 console.log('✅ register.js تم تحميله بنجاح مع دعم الحفظ المحلي');
