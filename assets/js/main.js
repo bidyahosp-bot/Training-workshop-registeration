@@ -249,3 +249,228 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   }, 3000);
 });
+// ============================================
+// تهيئة النظام المحلي
+// ============================================
+
+// ✅ متغير لتخزين حالة التهيئة
+let dbInitialized = false;
+
+// ✅ تهيئة قاعدة البيانات عند تحميل الصفحة
+async function initApp() {
+    console.log('🚀 بدء تهيئة التطبيق...');
+    
+    // عرض رسالة تحميل
+    showLoadingMessage('جاري تحميل البيانات...');
+    
+    const result = await initializeDatabase();
+    
+    if (result.success) {
+        dbInitialized = true;
+        console.log('✅ تم تهيئة قاعدة البيانات بنجاح');
+        
+        // بدء المزامنة في الخلفية
+        if (navigator.onLine) {
+            syncWithServer();
+        }
+        
+        // تحديث البيانات المعروضة
+        if (typeof loadHomePageData === 'function') {
+            loadHomePageData();
+        }
+        if (typeof loadDashboardData === 'function') {
+            loadDashboardData();
+        }
+        if (typeof loadWorkshops === 'function') {
+            loadWorkshops();
+        }
+        if (typeof loadEmployeeData === 'function') {
+            loadEmployeeData();
+        }
+        if (typeof loadReportData === 'function') {
+            loadReportData();
+        }
+        
+        hideLoadingMessage();
+    } else {
+        console.error('❌ فشل تهيئة قاعدة البيانات:', result.error);
+        showErrorMessage('فشل تحميل البيانات. يرجى التحقق من الاتصال بالإنترنت.');
+    }
+}
+
+// ✅ عرض رسالة تحميل
+function showLoadingMessage(message) {
+    let loader = document.getElementById('appLoader');
+    if (!loader) {
+        loader = document.createElement('div');
+        loader.id = 'appLoader';
+        loader.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(8px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999999;
+            transition: opacity 0.5s ease;
+        `;
+        loader.innerHTML = `
+            <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 350px;">
+                <div class="spinner" style="width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 15px;"></div>
+                <p id="loaderMessage" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${message}</p>
+            </div>
+        `;
+        document.body.appendChild(loader);
+    }
+    document.getElementById('loaderMessage').textContent = message;
+}
+
+// ✅ إخفاء رسالة التحميل
+function hideLoadingMessage() {
+    const loader = document.getElementById('appLoader');
+    if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => {
+            loader.remove();
+        }, 500);
+    }
+}
+
+// ✅ عرض رسالة خطأ
+function showErrorMessage(message) {
+    const errorDiv = document.createElement('div');
+    errorDiv.style.cssText = `
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        background: var(--bg-card);
+        padding: 30px;
+        border-radius: 20px;
+        box-shadow: var(--shadow-lg);
+        max-width: 400px;
+        text-align: center;
+        z-index: 999999;
+        border: 2px solid #e74c3c;
+    `;
+    errorDiv.innerHTML = `
+        <i class="fas fa-exclamation-triangle" style="font-size: 3rem; color: #e74c3c;"></i>
+        <h3 style="margin: 15px 0 10px; color: var(--text-primary);">حدث خطأ</h3>
+        <p style="color: var(--text-secondary);">${message}</p>
+        <button onclick="location.reload()" class="btn-primary" style="margin-top: 15px;">
+            <i class="fas fa-sync-alt"></i> إعادة المحاولة
+        </button>
+    `;
+    document.body.appendChild(errorDiv);
+    
+    // إخفاء رسالة التحميل
+    hideLoadingMessage();
+}
+
+// ✅ مراقبة الاتصال بالإنترنت
+window.addEventListener('online', function() {
+    console.log('🌐 تم استعادة الاتصال بالإنترنت');
+    syncWithServer().then(result => {
+        if (result.success && result.synced > 0) {
+            showNotification('تمت مزامنة ' + result.synced + ' ورشة مع الخادم');
+        }
+    });
+});
+
+window.addEventListener('offline', function() {
+    console.log('📴 تم فقدان الاتصال بالإنترنت');
+    showNotification('⚠️ أنت غير متصل بالإنترنت. سيتم حفظ البيانات محلياً.');
+});
+
+// ✅ عرض إشعار
+function showNotification(message, type = 'info') {
+    const notif = document.createElement('div');
+    notif.style.cssText = `
+        position: fixed;
+        bottom: 90px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: ${type === 'error' ? '#e74c3c' : '#2ecc71'};
+        color: white;
+        padding: 12px 24px;
+        border-radius: 12px;
+        box-shadow: var(--shadow-lg);
+        z-index: 99999;
+        font-weight: 600;
+        animation: slideUp 0.3s ease;
+        max-width: 90%;
+        text-align: center;
+    `;
+    notif.textContent = message;
+    document.body.appendChild(notif);
+    
+    setTimeout(() => {
+        notif.style.opacity = '0';
+        setTimeout(() => notif.remove(), 500);
+    }, 5000);
+}
+
+// ✅ تحديث وظيفة تحميل البيانات للاستخدام المحلي
+async function loadHomePageData() {
+    try {
+        // محاولة جلب البيانات من قاعدة البيانات المحلية أولاً
+        const summary = await getLocalSummary();
+        
+        if (summary) {
+            document.getElementById('totalWorkshops').textContent = summary.totalWorkshops || 0;
+            document.getElementById('totalHours').textContent = summary.totalHours || 0;
+            document.getElementById('totalEmployees').textContent = summary.totalEmployees || 0;
+            
+            // أفضل موظف
+            const topEmployees = await getTopEmployeesLocal(1);
+            if (topEmployees && topEmployees.length > 0) {
+                document.getElementById('topEmployee').textContent = 
+                    topEmployees[0].name + ' (' + topEmployees[0].workshops + ' ورشة)';
+            }
+            
+            // آخر ورشة
+            const workshops = await getAllWorkshopsLocal();
+            if (workshops && workshops.length > 0) {
+                const last = workshops[workshops.length - 1];
+                document.getElementById('lastEmployee').textContent = last.employeeName || '-';
+            }
+        }
+    } catch (error) {
+        console.error('Error loading home data:', error);
+    }
+}
+
+// ✅ جلب ملخص البيانات من المحلي
+async function getLocalSummary() {
+    try {
+        const workshops = await getAllWorkshopsLocal();
+        const employees = await getAllEmployeesLocal();
+        
+        return {
+            totalWorkshops: workshops.length,
+            totalHours: workshops.reduce((sum, w) => sum + (w.hours || 0), 0),
+            totalEmployees: employees.length,
+            monthlyWorkshops: workshops.filter(w => {
+                const d = new Date(w.timestamp || w.date);
+                const now = new Date();
+                return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+            }).length
+        };
+    } catch (error) {
+        console.error('Error getting local summary:', error);
+        return null;
+    }
+}
+
+// ✅ استدعاء التهيئة عند تحميل الصفحة
+document.addEventListener('DOMContentLoaded', function() {
+    // إذا كانت الصفحة الرئيسية، قم بالتهيئة
+    if (document.getElementById('totalWorkshops')) {
+        initApp();
+    }
+});
