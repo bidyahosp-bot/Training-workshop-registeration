@@ -7,11 +7,19 @@ let allWorkshops = [];
 
 async function loadEmployeeData() {
     try {
-        console.log('📡 جاري تحميل بيانات الموظفين من القاعدة المحلية...');
+        console.log('📡 جاري تحميل بيانات الموظفين من الخادم...');
         
-        // ✅ جلب البيانات من IndexedDB
-        allEmployees = await getAllEmployeesLocal();
-        allWorkshops = await getAllWorkshopsLocal();
+        const response = await fetch(API_URL);
+        const result = await response.json();
+        
+        if (result.status !== 'success' || !result.data) {
+            showEmployeeError('حدث خطأ في تحميل البيانات');
+            return;
+        }
+        
+        const data = result.data;
+        allEmployees = data.allEmployees || data.topEmployees || [];
+        allWorkshops = data.allWorkshops || data.recentWorkshops || [];
         
         console.log('👥 عدد الموظفين:', allEmployees.length);
         console.log('📚 عدد الورش:', allWorkshops.length);
@@ -22,8 +30,8 @@ async function loadEmployeeData() {
             showEmployeeError('لا توجد بيانات موظفين');
         }
     } catch (error) {
-        console.error('❌ خطأ في تحميل بيانات الموظفين:', error);
-        showEmployeeError('حدث خطأ في تحميل البيانات');
+        console.error('❌ خطأ:', error);
+        showEmployeeError('حدث خطأ في الاتصال بالخادم');
     }
 }
 
@@ -110,7 +118,7 @@ function renderEmployeeList(employees) {
     });
 }
 
-async function viewEmployeeProfile(id) {
+function viewEmployeeProfile(id) {
     if (!id) {
         alert('⚠️ يرجى إدخال رقم وظيفي أو اسم موظف');
         return;
@@ -183,7 +191,7 @@ function renderEmployeeWorkshops(id) {
     if (!tbody) return;
     
     const workshops = allWorkshops.filter(function(w) { 
-        return w.employeeId === id; 
+        return w.employeeId === id || w.employee === id; 
     });
     
     console.log('📚 عدد ورش الموظف:', workshops.length);
@@ -262,6 +270,32 @@ function updateProgress(count) {
     document.getElementById('currentBadge').textContent = current.name;
     document.getElementById('nextBadge').textContent = next.max !== Infinity ? next.name + ' (' + next.min + ')' : '🏆 Legend (100+)';
     document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
+}
+
+// دوال مساعدة
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('ar-SA', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch {
+        return '-';
+    }
+}
+
+function getBadge(count) {
+    if (count >= 100) return { emoji: '🏆', name: 'Legend', color: '#ff6b6b' };
+    if (count >= 50) return { emoji: '👑', name: 'Champion', color: '#ffd700' };
+    if (count >= 30) return { emoji: '💎', name: 'Platinum', color: '#e5e4e2' };
+    if (count >= 20) return { emoji: '🥇', name: 'Gold', color: '#ffd700' };
+    if (count >= 10) return { emoji: '🥈', name: 'Silver', color: '#c0c0c0' };
+    if (count >= 5) return { emoji: '🥉', name: 'Bronze', color: '#cd7f32' };
+    return { emoji: '🌟', name: 'Beginner', color: '#4fc3f7' };
 }
 
 // أحداث الصفحة
