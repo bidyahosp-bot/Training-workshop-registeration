@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bidiya Hospital Training Hub</title>
-    
+
     <!-- PWA Meta Tags -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a7a3a">
@@ -12,11 +12,11 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BTH">
     <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
-    
+
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <!-- CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/dark-mode.css">
@@ -66,7 +66,7 @@
             <div class="hero-content">
                 <h2 data-i18n="hero_title">معًا نبني ثقافة التعلم المستمر في مستشفى بدية</h2>
                 <p data-i18n="hero_subtitle">سجل مشاركاتك التدريبية وانضم إلى مجتمع التعلم</p>
-                
+
                 <div class="hero-counters">
                     <div class="counter-item">
                         <div class="counter-icon"><i class="fas fa-book-open"></i></div>
@@ -90,7 +90,7 @@
                         </div>
                     </div>
                 </div>
-                
+
                 <div class="quick-stats" style="margin-top:20px; display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
                     <div class="stat-badge" style="background:rgba(255,255,255,0.2); padding:10px 20px; border-radius:10px; backdrop-filter:blur(5px);">
                         <i class="fas fa-trophy" style="color:#ffd700;"></i>
@@ -170,67 +170,51 @@
     <!-- ============================================ -->
     <!-- SCRIPTS - تحميل بترتيب صحيح -->
     <!-- ============================================ -->
-    
+
     <!-- 1. الترجمة -->
     <script src="assets/js/i18n.js"></script>
-    
-    <!-- 2. Dexie.js (قاعدة البيانات) -->
-    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
-    
-    <!-- 3. قاعدة البيانات المحلية -->
-    <script src="assets/js/db/db.js"></script>
-    
-    <!-- 4. الملف الرئيسي -->
+
+    <!-- 2. الملف الرئيسي (API + دوال عامة) -->
     <script src="assets/js/main.js"></script>
-    
-    <!-- 5. تحديث الصفحة الرئيسية -->
+
+    <!-- 3. كود إضافي لتحديث الصفحة فوراً -->
     <script>
-        // تحميل البيانات فوراً بعد تحميل main.js
+        // بعد تحميل الصفحة، قم بتحديث البيانات
         document.addEventListener('DOMContentLoaded', function() {
             console.log('📄 الصفحة الرئيسية جاهزة');
-            
-            // محاولة تحميل البيانات بعد 1 ثانية
-            setTimeout(function() {
-                if (typeof loadHomePageData === 'function') {
-                    loadHomePageData();
-                } else {
-                    console.warn('⚠️ loadHomePageData غير معرفة');
-                    // محاولة بديلة لجلب البيانات من الخادم مباشرة
-                    fetchDataDirect();
-                }
-            }, 1000);
+
+            // محاولة استدعاء الدالة من main.js
+            if (typeof loadHomePageData === 'function') {
+                loadHomePageData();
+            } else {
+                console.warn('⚠️ loadHomePageData غير موجودة، جلب البيانات مباشرة...');
+                // نسخة احتياطية: جلب البيانات مباشرة من API
+                const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
+                fetch(API_URL)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.status === 'success' && result.data) {
+                            const summary = result.data.summary || {};
+                            document.getElementById('totalWorkshops').textContent = summary.totalWorkshops || 0;
+                            document.getElementById('totalHours').textContent = summary.totalHours || 0;
+                            document.getElementById('totalEmployees').textContent = summary.totalEmployees || 0;
+                            const topEmp = result.data.topEmployees?.[0];
+                            if (topEmp) {
+                                document.getElementById('topEmployee').textContent = topEmp.name + ' (' + topEmp.workshops + ' ورشة)';
+                            }
+                            const lastEmp = result.data.lastWorkshop;
+                            if (lastEmp) {
+                                document.getElementById('lastEmployee').textContent = lastEmp.employee || '-';
+                            }
+                        }
+                    })
+                    .catch(err => console.warn('⚠️ فشل جلب البيانات:', err));
+            }
         });
-        
-        // دالة بديلة لجلب البيانات مباشرة من الخادم (في حالة فشل db)
-        function fetchDataDirect() {
-            const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
-            
-            fetch(API_URL)
-                .then(response => response.json())
-                .then(result => {
-                    if (result.status === 'success' && result.data) {
-                        const summary = result.data.summary || {};
-                        document.getElementById('totalWorkshops').textContent = summary.totalWorkshops || 0;
-                        document.getElementById('totalHours').textContent = summary.totalHours || 0;
-                        document.getElementById('totalEmployees').textContent = summary.totalEmployees || 0;
-                        
-                        const topEmp = result.data.topEmployees?.[0];
-                        if (topEmp) {
-                            document.getElementById('topEmployee').textContent = topEmp.name + ' (' + topEmp.workshops + ' ورشة)';
-                        }
-                        
-                        const lastEmp = result.data.lastWorkshop;
-                        if (lastEmp) {
-                            document.getElementById('lastEmployee').textContent = lastEmp.employee || '-';
-                        }
-                    }
-                })
-                .catch(err => console.warn('⚠️ فشل جلب البيانات مباشرة:', err));
-        }
-        
-        // PWA - تسجيل Service Worker
+
+        // تسجيل Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')  // مسار نسبي، سيبحث في نفس المجلد الذي فيه الصفحة
+            navigator.serviceWorker.register('sw.js')
                 .then(() => console.log('✅ Service Worker مسجل'))
                 .catch(err => console.log('❌ Service Worker:', err));
         }
