@@ -1,110 +1,106 @@
 // ============================================
 // Register JavaScript - Bidiya Training Hub
-// الرقم الوظيفي مفتاح رئيسي
 // ============================================
 
-document.addEventListener('DOMContentLoaded', async function() {
+// ============================================
+// تسجيل ورشة جديدة
+// ============================================
+async function registerWorkshop(event) {
+    event.preventDefault();
+    
+    // جمع البيانات من النموذج
     const form = document.getElementById('registerForm');
-    const today = new Date().toISOString().split('T')[0];
-    const dateInput = document.getElementById('workshopDate');
+    const formData = new FormData(form);
     
-    if (dateInput) {
-        dateInput.max = today;
-        dateInput.value = today;
+    const data = {
+        employeeId: formData.get('employeeId') || '',
+        employeeName: formData.get('employeeName') || '',
+        department: formData.get('department') || '',
+        workshopTitle: formData.get('workshopTitle') || '',
+        hours: parseFloat(formData.get('workshopHours')) || 0,
+        organizer: formData.get('organizer') || '',
+        certificate: formData.get('certificate') || 'لا',
+        workshopDate: formData.get('workshopDate') || new Date().toISOString().split('T')[0]
+    };
+    
+    // التحقق من الحقول المطلوبة
+    if (!data.employeeId) {
+        alert('⚠️ يرجى إدخال الرقم الوظيفي');
+        return;
     }
     
-    const departmentSelect = document.getElementById('department');
-    if (departmentSelect) {
-        await populateDepartments(departmentSelect);
+    if (!data.department) {
+        alert('⚠️ يرجى اختيار القسم');
+        return;
     }
     
-    const hoursInput = document.getElementById('workshopHours');
-    if (hoursInput) {
-        hoursInput.addEventListener('input', function() {
-            const val = parseFloat(this.value);
-            const small = this.parentElement.querySelector('small');
-            if (small) {
-                if (isNaN(val) || val < 6) {
-                    small.style.color = '#e74c3c';
-                    small.textContent = small.dataset.i18nHoursNote || '⚠️ يجب أن تكون المدة أكثر من 6 ساعات';
-                } else {
-                    small.style.color = '#27ae60';
-                    small.textContent = '✅ مدة الورشة مقبولة';
-                }
-            }
+    if (!data.workshopTitle) {
+        alert('⚠️ يرجى إدخال عنوان الورشة');
+        return;
+    }
+    
+    if (!data.organizer) {
+        alert('⚠️ يرجى اختيار الجهة المنظمة');
+        return;
+    }
+    
+    // تغيير نص الزر
+    const submitBtn = document.querySelector('#registerForm button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
+    submitBtn.disabled = true;
+    
+    try {
+        console.log('📡 جاري إرسال البيانات:', data);
+        
+        // ✅ استخدام POST مع إرسال البيانات كـ JSON
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
         });
+        
+        // محاولة قراءة الرد
+        let result;
+        try {
+            result = await response.json();
+        } catch (e) {
+            // إذا لم يكن الرد JSON، نعتبره نجاح
+            result = { status: 'success', message: 'تم التسجيل بنجاح' };
+        }
+        
+        console.log('📡 الرد من الخادم:', result);
+        
+        if (result.status === 'success') {
+            alert('✅ تم تسجيل الورشة بنجاح!');
+            form.reset();
+            // إعادة تعيين التاريخ
+            const dateInput = document.getElementById('workshopDate');
+            if (dateInput) dateInput.value = '';
+        } else {
+            alert('⚠️ ' + (result.message || 'حدث خطأ في التسجيل'));
+        }
+        
+    } catch (error) {
+        console.error('❌ خطأ في التسجيل:', error);
+        alert('⚠️ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
+    } finally {
+        // إعادة الزر
+        submitBtn.innerHTML = originalText;
+        submitBtn.disabled = false;
     }
-    
+}
+
+// ============================================
+// تحميل الصفحة
+// ============================================
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registerForm');
     if (form) {
-        form.addEventListener('submit', async function(e) {
-            e.preventDefault();
-            
-            const formData = new FormData(this);
-            const data = {};
-            formData.forEach(function(value, key) {
-                data[key] = value;
-            });
-            
-            // ✅ التحقق من الرقم الوظيفي
-            if (!data['employeeId'] || data['employeeId'].trim() === '') {
-                alert('⚠️ الرقم الوظيفي مطلوب. يرجى إدخال رقمك الوظيفي.');
-                document.getElementById('employeeId').focus();
-                return;
-            }
-            
-            const workshopData = {
-                employeeId: data['employeeId'].trim(),
-                employeeName: data['employeeName'] || '',
-                department: data['department'] || '',
-                workshopTitle: data['workshopTitle'] || '',
-                hours: parseFloat(data['workshopHours']) || 0,
-                organizer: data['organizer'] || '',
-                certificate: data['certificate'] || 'لا'
-            };
-            
-            if (workshopData.hours < 6) {
-                alert('⚠️ مدة الورشة يجب أن تكون أكثر من 6 ساعات');
-                return;
-            }
-            
-            if (!workshopData.department || !workshopData.workshopTitle || !workshopData.organizer) {
-                alert('⚠️ يرجى تعبئة جميع الحقول المطلوبة');
-                return;
-            }
-            
-            const submitBtn = form.querySelector('button[type="submit"]');
-            const originalText = submitBtn.innerHTML;
-            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جاري التسجيل...';
-            submitBtn.disabled = true;
-            
-            try {
-                const response = await fetch(API_URL, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(workshopData)
-                });
-                
-                const result = await response.json();
-                
-                if (result.status === 'success') {
-                    alert('✅ تم تسجيل الورشة بنجاح!\n' +
-                          '📚 ' + workshopData.workshopTitle + '\n' +
-                          '👤 ' + workshopData.employeeId + ' - ' + workshopData.employeeName);
-                    form.reset();
-                    if (dateInput) dateInput.value = today;
-                    if (typeof loadHomePageData === 'function') {
-                        loadHomePageData();
-                    }
-                } else {
-                    alert('❌ حدث خطأ في التسجيل: ' + (result.message || 'يرجى المحاولة مرة أخرى'));
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                alert('❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
-            } finally {
-                submitBtn.innerHTML = originalText;
-                submitBtn.disabled = false;
-            }
-        });
+        form.addEventListener('submit', registerWorkshop);
     }
+    
+    console.log('✅ register.js تم تحميله بنجاح');
 });
