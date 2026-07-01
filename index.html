@@ -1,182 +1,25 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- Dexie.js - قاعدة البيانات المحلية -->
-<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
-
-<!-- قاعدة البيانات المحلية -->
-<script src="assets/js/db/db.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Bidiya Hospital Training Hub</title>
     
     <!-- PWA Meta Tags -->
-    <link rel="manifest" href="/Training-workshop-registration/manifest.json">
+    <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#1a7a3a">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="BTH">
-    <link rel="apple-touch-icon" href="/Training-workshop-registration/assets/icons/icon-192x192.png">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- CSS -->
-    <link rel="stylesheet" href="/Training-workshop-registration/assets/css/style.css">
-    <link rel="stylesheet" href="/Training-workshop-registration/assets/css/dark-mode.css">
-    
-    <style>
-        /* إصلاح سريع للتأكد من ظهور التنسيق */
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Cairo', sans-serif; background: #f5f7fa; color: #333; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
-        .header { background: #1a7a3a; color: white; padding: 15px 0; }
-        .header-content { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-        .logo { display: flex; align-items: center; gap: 15px; }
-        .logo-img { width: 50px; height: 50px; }
-        .logo-title { font-size: 1.2rem; font-weight: 700; }
-        .logo-tagline { font-size: 0.8rem; opacity: 0.8; }
-        .main-nav { display: flex; gap: 10px; flex-wrap: wrap; }
-        .main-nav a { color: white; text-decoration: none; padding: 8px 15px; border-radius: 8px; font-size: 0.9rem; transition: background 0.3s; }
-        .main-nav a:hover { background: rgba(255,255,255,0.2); }
-        .hero { padding: 60px 0; text-align: center; background: linear-gradient(135deg, #e8f5e9, #c8e6c9); }
-        .hero h2 { font-size: 2rem; color: #1a7a3a; margin-bottom: 15px; }
-        .hero-counters { display: flex; justify-content: center; gap: 40px; margin-top: 30px; flex-wrap: wrap; }
-        .counter-item { display: flex; align-items: center; gap: 15px; background: white; padding: 20px 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .counter-icon { font-size: 2rem; color: #1a7a3a; }
-        .counter-number { font-size: 2rem; font-weight: 700; color: #1a7a3a; }
-        .counter-label { font-size: 0.9rem; color: #666; }
-        .actions-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; padding: 40px 0; }
-        .action-card { background: white; padding: 30px; border-radius: 15px; text-align: center; text-decoration: none; color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.08); transition: transform 0.3s; }
-        .action-card:hover { transform: translateY(-5px); }
-        .action-card i { font-size: 2.5rem; color: #1a7a3a; margin-bottom: 15px; }
-        .action-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
-        .action-card p { font-size: 0.85rem; color: #666; }
-        .footer { background: #1a7a3a; color: white; padding: 30px 0; margin-top: 40px; text-align: center; }
-        .dark-toggle { position: fixed; bottom: 20px; left: 20px; z-index: 999; background: #1a7a3a; color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.3rem; cursor: pointer; box-shadow: 0 4px 15px rgba(0,0,0,0.3); }
-        .lang-selector { position: fixed; top: 20px; left: 20px; z-index: 999; display: flex; gap: 5px; }
-        .lang-btn { padding: 8px 15px; border: none; border-radius: 8px; cursor: pointer; font-family: 'Cairo', sans-serif; font-size: 0.8rem; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-        .lang-btn.active { background: #1a7a3a; color: white; }
-        @media (max-width: 768px) {
-            .header-content { flex-direction: column; gap: 10px; }
-            .main-nav { justify-content: center; }
-            .main-nav a { font-size: 0.75rem; padding: 5px 10px; }
-            .hero h2 { font-size: 1.3rem; }
-            .hero-counters { gap: 15px; }
-            .counter-item { padding: 15px 20px; }
-            .counter-number { font-size: 1.3rem; }
-            .actions-grid { grid-template-columns: 1fr 1fr; gap: 10px; }
-            .action-card { padding: 15px; }
-            .action-card i { font-size: 1.8rem; }
-            .action-card h3 { font-size: 0.9rem; }
-        }
-        @media (max-width: 480px) {
-            .actions-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
-            .action-card { padding: 12px; }
-            .action-card i { font-size: 1.4rem; }
-            .action-card h3 { font-size: 0.75rem; }
-            .action-card p { font-size: 0.65rem; }
-            .logo-title { font-size: 0.9rem; }
-            .main-nav a { font-size: 0.65rem; padding: 4px 8px; }
-        }
-        /* زر التثبيت اليدوي */
-        #manualInstallBtn {
-            position: fixed;
-            bottom: 90px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1a7a3a;
-            color: white;
-            border: none;
-            padding: 14px 30px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 700;
-            box-shadow: 0 4px 20px rgba(26, 122, 58, 0.4);
-            z-index: 99999;
-            cursor: pointer;
-            font-family: 'Cairo', sans-serif;
-            display: none;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.05); }
-        }
-            /* تحسين إضافي للوضوح */
-    .counter-number {
-        color: var(--text-primary) !important;
-        font-weight: 900 !important;
-    }
-    
-    .stat-badge strong {
-        color: var(--text-primary) !important;
-    }
-    
-    .action-card h3 {
-        color: var(--text-primary) !important;
-    }
-    
-    /* تحسين الألوان في الوضع المظلم */
-    body.dark-mode .counter-number {
-        color: #ffffff !important;
-    }
-    
-    body.dark-mode .stat-badge strong {
-        color: #ffffff !important;
-    }
-    
-    body.dark-mode .action-card h3 {
-        color: #e6edf3 !important;
-    }
-    
-    body.dark-mode .counter-label {
-        color: #b0c4de !important;
-    }
-    
-    body.dark-mode .stat-badge {
-        color: #b0c4de !important;
-    }
-  
-    /* تحسين فوري للرؤية */
-    .hero h2 {
-        color: #1a7a3a !important;
-        text-shadow: 0 2px 8px rgba(255, 255, 255, 0.6) !important;
-    }
-    
-    .counter-number {
-        color: #1a7a3a !important;
-        font-weight: 900 !important;
-    }
-    
-    .counter-label {
-        color: #2a4a3a !important;
-        font-weight: 700 !important;
-    }
-    
-    .stat-badge strong {
-        color: #1a1a2e !important;
-    }
-    
-    /* الوضع المظلم */
-    body.dark-mode .hero h2 {
-        color: #4fc3a0 !important;
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.8) !important;
-    }
-    
-    body.dark-mode .counter-number {
-        color: #4fc3a0 !important;
-    }
-    
-    body.dark-mode .counter-label {
-        color: #b0c4de !important;
-    }
-    
-    body.dark-mode .stat-badge strong {
-        color: #ffffff !important;
-    }
-</style>
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/dark-mode.css">
 </head>
 <body>
     <!-- Dark Mode Toggle -->
@@ -191,27 +34,27 @@
     </div>
 
     <!-- زر التثبيت اليدوي -->
-    <button id="manualInstallBtn">📱 تثبيت التطبيق</button>
+    <button id="manualInstallBtn" style="display:none; position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:#1a7a3a; color:white; border:none; padding:14px 30px; border-radius:50px; font-size:1rem; font-weight:700; box-shadow:0 4px 20px rgba(26,122,58,0.4); z-index:99999; cursor:pointer; font-family:'Cairo',sans-serif;">📱 تثبيت التطبيق</button>
 
     <!-- HEADER -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="/Training-workshop-registration/assets/img/logo.png" alt="BTH Logo" class="logo-img" onerror="this.style.display='none'">
+                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img" onerror="this.style.display='none'">
                     <div>
                         <h1 class="logo-title" data-i18n="app_name">منصة مستشفى بدية للتدريب والتطوير المهني</h1>
                         <p class="logo-tagline" data-i18n="tagline">نتعلم اليوم... لنرعى أفضل غدًا</p>
                     </div>
                 </div>
                 <nav class="main-nav">
-                    <a href="/Training-workshop-registration/index.html" data-i18n="nav_home">الرئيسية</a>
-                    <a href="/Training-workshop-registration/dashboard.html" data-i18n="nav_dashboard">لوحة الشرف</a>
-                    <a href="/Training-workshop-registration/workshops.html" data-i18n="nav_workshops">سجل الورش</a>
-                    <a href="/Training-workshop-registration/register.html" data-i18n="nav_register">تسجيل ورشة</a>
-                    <a href="/Training-workshop-registration/reports.html" data-i18n="nav_reports">التقارير</a>
-                    <a href="/Training-workshop-registration/employee.html" data-i18n="nav_employee">صفحة الموظف</a>
-                    <a href="/Training-workshop-registration/about.html" data-i18n="nav_about">عن المطور</a>
+                    <a href="index.html" class="active" data-i18n="nav_home">الرئيسية</a>
+                    <a href="dashboard.html" data-i18n="nav_dashboard">لوحة الشرف</a>
+                    <a href="workshops.html" data-i18n="nav_workshops">سجل الورش</a>
+                    <a href="register.html" data-i18n="nav_register">تسجيل ورشة</a>
+                    <a href="reports.html" data-i18n="nav_reports">التقارير</a>
+                    <a href="employee.html" data-i18n="nav_employee">صفحة الموظف</a>
+                    <a href="about.html" data-i18n="nav_about">عن المطور</a>
                 </nav>
             </div>
         </div>
@@ -249,12 +92,12 @@
                 </div>
                 
                 <div class="quick-stats" style="margin-top:20px; display:flex; gap:20px; justify-content:center; flex-wrap:wrap;">
-                    <div class="stat-badge" style="background:white; padding:10px 20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+                    <div class="stat-badge" style="background:rgba(255,255,255,0.2); padding:10px 20px; border-radius:10px; backdrop-filter:blur(5px);">
                         <i class="fas fa-trophy" style="color:#ffd700;"></i>
                         <span data-i18n="top_employee_label">أفضل موظف:</span>
                         <strong id="topEmployee">-</strong>
                     </div>
-                    <div class="stat-badge" style="background:white; padding:10px 20px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
+                    <div class="stat-badge" style="background:rgba(255,255,255,0.2); padding:10px 20px; border-radius:10px; backdrop-filter:blur(5px);">
                         <i class="fas fa-bolt" style="color:#ff6b6b;"></i>
                         <span data-i18n="last_registration_label">آخر تسجيل:</span>
                         <strong id="lastEmployee">-</strong>
@@ -268,22 +111,22 @@
     <section class="quick-actions">
         <div class="container">
             <div class="actions-grid">
-                <a href="/Training-workshop-registration/register.html" class="action-card">
+                <a href="register.html" class="action-card">
                     <i class="fas fa-plus-circle"></i>
                     <h3 data-i18n="register_workshop">تسجيل ورشة جديدة</h3>
                     <p data-i18n="register_desc">أضف مشاركتك التدريبية الجديدة</p>
                 </a>
-                <a href="/Training-workshop-registration/workshops.html" class="action-card">
+                <a href="workshops.html" class="action-card">
                     <i class="fas fa-search"></i>
                     <h3 data-i18n="browse_workshops">استعراض الورش</h3>
                     <p data-i18n="browse_desc">ابحث وتصفح جميع الورش المسجلة</p>
                 </a>
-                <a href="/Training-workshop-registration/dashboard.html" class="action-card">
+                <a href="dashboard.html" class="action-card">
                     <i class="fas fa-chart-line"></i>
                     <h3 data-i18n="view_dashboard">لوحة الشرف</h3>
                     <p data-i18n="dashboard_desc">شاهد أفضل الموظفين والأقسام</p>
                 </a>
-                <a href="/Training-workshop-registration/reports.html" class="action-card">
+                <a href="reports.html" class="action-card">
                     <i class="fas fa-file-alt"></i>
                     <h3 data-i18n="view_reports">التقارير</h3>
                     <p data-i18n="reports_desc">استخرج تقارير وإحصائيات مفصلة</p>
@@ -325,93 +168,72 @@
     </footer>
 
     <!-- ============================================ -->
-    <!-- SCRIPTS -->
+    <!-- SCRIPTS - تحميل بترتيب صحيح -->
     <!-- ============================================ -->
-    <script src="/Training-workshop-registration/assets/js/i18n.js"></script>
-    <script src="/Training-workshop-registration/assets/js/main.js"></script>
     
+    <!-- 1. الترجمة -->
+    <script src="assets/js/i18n.js"></script>
+    
+    <!-- 2. Dexie.js (قاعدة البيانات) -->
+    <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
+    
+    <!-- 3. قاعدة البيانات المحلية -->
+    <script src="assets/js/db/db.js"></script>
+    
+    <!-- 4. الملف الرئيسي -->
+    <script src="assets/js/main.js"></script>
+    
+    <!-- 5. تحديث الصفحة الرئيسية -->
     <script>
-    // ============================================
-    // 1. تسجيل Service Worker
-    // ============================================
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/Training-workshop-registration/sw.js')
-            .then(function(registration) {
-                console.log('✅ Service Worker مسجل بنجاح');
-            })
-            .catch(function(error) {
-                console.log('❌ فشل تسجيل Service Worker:', error);
-            });
-    }
-
-    // ============================================
-    // 2. نافذة التثبيت التلقائية
-    // ============================================
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', function(e) {
-        e.preventDefault();
-        deferredPrompt = e;
-        console.log('📱 التطبيق جاهز للتثبيت');
-        
-        // إظهار الزر اليدوي
-        var installBtn = document.getElementById('manualInstallBtn');
-        if (installBtn) {
-            installBtn.style.display = 'block';
-        }
-        
-        // محاولة عرض النافذة تلقائياً بعد 3 ثوانٍ
-        setTimeout(function() {
-            if (deferredPrompt) {
-                deferredPrompt.prompt();
-                deferredPrompt.userChoice.then(function(choiceResult) {
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('✅ تم تثبيت التطبيق');
-                        var btn = document.getElementById('manualInstallBtn');
-                        if (btn) btn.style.display = 'none';
-                    } else {
-                        console.log('❌ تم رفض التثبيت');
-                    }
-                    deferredPrompt = null;
-                });
-            }
-        }, 3000);
-    });
-
-    // ============================================
-    // 3. زر التثبيت اليدوي
-    // ============================================
-    document.addEventListener('DOMContentLoaded', function() {
-        var installBtn = document.getElementById('manualInstallBtn');
-        if (installBtn) {
-            installBtn.addEventListener('click', function() {
-                if (deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function(choiceResult) {
-                        if (choiceResult.outcome === 'accepted') {
-                            console.log('✅ تم تثبيت التطبيق');
-                            installBtn.style.display = 'none';
-                        } else {
-                            console.log('❌ تم رفض التثبيت');
-                        }
-                        deferredPrompt = null;
-                    });
+        // تحميل البيانات فوراً بعد تحميل main.js
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('📄 الصفحة الرئيسية جاهزة');
+            
+            // محاولة تحميل البيانات بعد 1 ثانية
+            setTimeout(function() {
+                if (typeof loadHomePageData === 'function') {
+                    loadHomePageData();
                 } else {
-                    // إذا لم يظهر قبل، حاول مرة أخرى
-                    alert('⚠️ يرجى استخدام خيار "تثبيت" من قائمة المتصفح (⋮)');
+                    console.warn('⚠️ loadHomePageData غير معرفة');
+                    // محاولة بديلة لجلب البيانات من الخادم مباشرة
+                    fetchDataDirect();
                 }
-            });
+            }, 1000);
+        });
+        
+        // دالة بديلة لجلب البيانات مباشرة من الخادم (في حالة فشل db)
+        function fetchDataDirect() {
+            const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
+            
+            fetch(API_URL)
+                .then(response => response.json())
+                .then(result => {
+                    if (result.status === 'success' && result.data) {
+                        const summary = result.data.summary || {};
+                        document.getElementById('totalWorkshops').textContent = summary.totalWorkshops || 0;
+                        document.getElementById('totalHours').textContent = summary.totalHours || 0;
+                        document.getElementById('totalEmployees').textContent = summary.totalEmployees || 0;
+                        
+                        const topEmp = result.data.topEmployees?.[0];
+                        if (topEmp) {
+                            document.getElementById('topEmployee').textContent = topEmp.name + ' (' + topEmp.workshops + ' ورشة)';
+                        }
+                        
+                        const lastEmp = result.data.lastWorkshop;
+                        if (lastEmp) {
+                            document.getElementById('lastEmployee').textContent = lastEmp.employee || '-';
+                        }
+                    }
+                })
+                .catch(err => console.warn('⚠️ فشل جلب البيانات مباشرة:', err));
         }
-    });
-
-    // ============================================
-    // 4. التحقق من التثبيت
-    // ============================================
-    window.addEventListener('appinstalled', function() {
-        console.log('✅ تم تثبيت التطبيق بنجاح');
-        var btn = document.getElementById('manualInstallBtn');
-        if (btn) btn.style.display = 'none';
-    });
+        
+        // PWA - تسجيل Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log('✅ Service Worker مسجل'))
+                .catch(err => console.log('❌ Service Worker:', err));
+        }
     </script>
 </body>
 </html>
