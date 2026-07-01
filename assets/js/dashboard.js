@@ -1,16 +1,17 @@
 // ============================================
 // Dashboard JavaScript - Bidiya Training Hub
 // ============================================
-// ============================================
-// Dashboard - استخدام البيانات المحلية
-// ============================================
 
 async function loadDashboardData() {
     try {
-        // ✅ جلب البيانات من قاعدة البيانات المحلية
+        console.log('📡 جاري تحميل بيانات لوحة الشرف من القاعدة المحلية...');
+        
         const workshops = await getAllWorkshopsLocal();
         const employees = await getAllEmployeesLocal();
         const topEmployees = await getTopEmployeesLocal(3);
+        
+        console.log('📚 عدد الورش:', workshops.length);
+        console.log('👥 عدد الموظفين:', employees.length);
         
         if (workshops.length === 0 && employees.length === 0) {
             showDashboardError('لا توجد بيانات. يرجى الاتصال بالإنترنت لتحميل البيانات.');
@@ -20,7 +21,7 @@ async function loadDashboardData() {
         // تحديث KPIs
         const totalHours = workshops.reduce((sum, w) => sum + (w.hours || 0), 0);
         const monthlyWorkshops = workshops.filter(w => {
-            const d = new Date(w.timestamp || w.date);
+            const d = new Date(w.workshopDate || w.date || w.timestamp);
             const now = new Date();
             return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
         }).length;
@@ -40,11 +41,16 @@ async function loadDashboardData() {
         renderTopDepartments(departments);
         
         // آخر ورشة
-        const lastWorkshop = workshops.length > 0 ? workshops[workshops.length - 1] : null;
+        const sorted = [...workshops].sort((a, b) => {
+            const da = new Date(a.timestamp || a.date || 0);
+            const db = new Date(b.timestamp || b.date || 0);
+            return db - da;
+        });
+        const lastWorkshop = sorted.length > 0 ? sorted[0] : null;
         renderLatestWorkshop(lastWorkshop);
         
         // النشاط الأخير
-        const recent = workshops.slice(-10).reverse();
+        const recent = sorted.slice(0, 10);
         renderRecentActivity(recent);
         
         document.getElementById('lastUpdated').textContent = new Date().toLocaleString('ar-SA');
@@ -55,85 +61,6 @@ async function loadDashboardData() {
     }
 }
 
-// ✅ حساب إحصائيات الأقسام
-function getDepartmentsStats(employees) {
-    const deptMap = {};
-    employees.forEach(emp => {
-        if (!deptMap[emp.department]) {
-            deptMap[emp.department] = {
-                name: emp.department,
-                workshops: 0,
-                totalHours: 0,
-                employees: 0
-            };
-        }
-        deptMap[emp.department].workshops += emp.workshops || 0;
-        deptMap[emp.department].totalHours += emp.totalHours || 0;
-        deptMap[emp.department].employees += 1;
-    });
-    
-    return Object.values(deptMap)
-        .sort((a, b) => b.workshops - a.workshops)
-        .slice(0, 5);
-}
-// ============================================
-// تحميل بيانات لوحة الشرف
-// ============================================
-async function loadDashboardData() {
-    try {
-        console.log('📡 جاري تحميل بيانات لوحة الشرف...');
-        const response = await fetch(API_URL);
-        const result = await response.json();
-        
-        console.log('📡 الرد من الخادم:', result);
-        
-        if (result.status === 'success' && result.data) {
-            const data = result.data;
-            
-            // ✅ تحديث KPIs - استخدام summary بدلاً من kpis
-            const summary = data.summary || {};
-            
-            document.getElementById('kpiTotalWorkshops').textContent = summary.totalWorkshops || 0;
-            document.getElementById('kpiTotalHours').textContent = summary.totalHours || 0;
-            document.getElementById('kpiTotalEmployees').textContent = summary.totalEmployees || 0;
-            document.getElementById('kpiMonthly').textContent = summary.monthlyWorkshops || 0;
-            
-            // حساب متوسط الساعات
-            const avgHours = summary.totalEmployees > 0 ? 
-                (summary.totalHours / summary.totalEmployees) : 0;
-            document.getElementById('kpiAvgHours').textContent = avgHours.toFixed(1) || 0;
-            
-            document.getElementById('lastUpdated').textContent = data.lastUpdated || '-';
-            
-            // ✅ عرض أفضل الموظفين
-            renderTopEmployees(data.topEmployees || []);
-            
-            // ✅ عرض أفضل الأقسام
-            renderTopDepartments(data.topDepartments || []);
-            
-            // ✅ عرض أسرع موظف
-            renderFastestEmployee(data.fastestEmployee);
-            
-            // ✅ عرض آخر ورشة
-            renderLatestWorkshop(data.lastWorkshop);
-            
-            // ✅ عرض النشاط الأخير
-            renderRecentActivity(data.recentWorkshops || []);
-            
-            console.log('✅ تم تحديث لوحة الشرف بنجاح');
-        } else {
-            console.warn('⚠️ خطأ في البيانات:', result);
-            showDashboardError('حدث خطأ في تحميل البيانات: ' + (result.message || 'خطأ غير معروف'));
-        }
-    } catch (error) {
-        console.error('❌ خطأ في تحميل البيانات:', error);
-        showDashboardError('حدث خطأ في الاتصال بالخادم. تحقق من الرابط.');
-    }
-}
-
-// ============================================
-// عرض رسالة خطأ
-// ============================================
 function showDashboardError(message) {
     const container = document.querySelector('.dashboard-page .container');
     if (container) {
@@ -149,9 +76,6 @@ function showDashboardError(message) {
     }
 }
 
-// ============================================
-// عرض أفضل الموظفين (المنصة)
-// ============================================
 function renderTopEmployees(employees) {
     const container = document.getElementById('topEmployees');
     if (!container) return;
@@ -184,9 +108,28 @@ function renderTopEmployees(employees) {
     }).join('');
 }
 
-// ============================================
-// عرض أفضل الأقسام
-// ============================================
+function getDepartmentsStats(employees) {
+    const deptMap = {};
+    employees.forEach(emp => {
+        if (!emp.department) return;
+        if (!deptMap[emp.department]) {
+            deptMap[emp.department] = {
+                name: emp.department,
+                workshops: 0,
+                totalHours: 0,
+                employees: 0
+            };
+        }
+        deptMap[emp.department].workshops += emp.workshops || 0;
+        deptMap[emp.department].totalHours += emp.totalHours || 0;
+        deptMap[emp.department].employees += 1;
+    });
+    
+    return Object.values(deptMap)
+        .sort((a, b) => b.workshops - a.workshops)
+        .slice(0, 5);
+}
+
 function renderTopDepartments(departments) {
     const container = document.getElementById('topDepartments');
     if (!container) return;
@@ -208,13 +151,12 @@ function renderTopDepartments(departments) {
     container.innerHTML = departments.map(function(dept, index) {
         const icon = deptIcons[dept.name] || '🏢';
         const width = Math.min((dept.workshops / maxWorkshops) * 100, 100);
-        const translatedName = translateDepartment(dept.name);
         
         return `
             <div class="dept-item">
                 <div class="dept-rank">#${index + 1}</div>
                 <div class="dept-info">
-                    <div class="dept-name">${icon} ${translatedName}</div>
+                    <div class="dept-name">${icon} ${dept.name}</div>
                     <div class="dept-stats">
                         <span>📚 ${dept.workshops} ورشة</span>
                         <span>👥 ${dept.employees || 0} موظف</span>
@@ -223,64 +165,13 @@ function renderTopDepartments(departments) {
                 </div>
                 <div class="dept-progress">
                     <div class="dept-bar" style="width: ${width}%"></div>
-                    <span class="dept-percent" style="font-size:0.7rem; color:var(--text-secondary);">${Math.round(width)}%</span>
+                    <span style="font-size:0.7rem; color:var(--text-secondary);">${Math.round(width)}%</span>
                 </div>
             </div>
         `;
     }).join('');
 }
 
-// ============================================
-// ترجمة الأقسام
-// ============================================
-function translateDepartment(deptName) {
-    const translations = {
-        ar: {
-            'الأطباء': 'الأطباء', 'التمريض': 'التمريض', 'التضميد': 'التضميد',
-            'الصيدلة': 'الصيدلة', 'الأشعة': 'الأشعة', 'الأسنان': 'الأسنان',
-            'المختبر': 'المختبر', 'السجلات الطبية': 'السجلات الطبية',
-            'الإدارة': 'الإدارة', 'التثقيف الصحي': 'التثقيف الصحي',
-            'التغذية': 'التغذية'
-        },
-        en: {
-            'الأطباء': 'Doctors', 'التمريض': 'Nursing', 'التضميد': 'Dressing',
-            'الصيدلة': 'Pharmacy', 'الأشعة': 'Radiology', 'الأسنان': 'Dentistry',
-            'المختبر': 'Laboratory', 'السجلات الطبية': 'Medical Records',
-            'الإدارة': 'Administration', 'التثقيف الصحي': 'Health Education',
-            'التغذية': 'Nutrition'
-        }
-    };
-    
-    const lang = currentLang || 'ar';
-    return translations[lang]?.[deptName] || deptName;
-}
-
-// ============================================
-// عرض أسرع موظف
-// ============================================
-function renderFastestEmployee(employee) {
-    const container = document.getElementById('fastestEmployee');
-    if (!container) return;
-    
-    if (!employee) {
-        container.innerHTML = '<p class="no-data">لا توجد بيانات كافية</p>';
-        return;
-    }
-    
-    container.innerHTML = `
-        <div class="fastest-content">
-            <div class="fastest-icon">🚀</div>
-            <div>
-                <div class="fastest-name">${employee.name || employee.employeeId}</div>
-                <div class="fastest-time">⏱️ ${employee.timeBetween || 'سجل سريع'}</div>
-            </div>
-        </div>
-    `;
-}
-
-// ============================================
-// عرض آخر ورشة
-// ============================================
 function renderLatestWorkshop(workshop) {
     const container = document.getElementById('latestWorkshop');
     if (!container) return;
@@ -294,21 +185,18 @@ function renderLatestWorkshop(workshop) {
         <div class="workshop-card">
             <div class="workshop-icon">📌</div>
             <div class="workshop-info">
-                <div class="workshop-title">${workshop.workshop || '-'}</div>
+                <div class="workshop-title">${workshop.workshopTitle || workshop.workshop || '-'}</div>
                 <div class="workshop-meta">
-                    <span>👤 ${workshop.employee || workshop.employeeId || '-'}</span>
+                    <span>👤 ${workshop.employeeName || workshop.employee || '-'}</span>
                     <span>🏢 ${workshop.department || 'قسم غير محدد'}</span>
                     <span>⏱️ ${workshop.hours || 0} ساعة</span>
-                    <span>📅 ${formatDate(workshop.date)}</span>
+                    <span>📅 ${formatDate(workshop.workshopDate || workshop.date || workshop.timestamp)}</span>
                 </div>
             </div>
         </div>
     `;
 }
 
-// ============================================
-// عرض النشاط الأخير
-// ============================================
 function renderRecentActivity(workshops) {
     const container = document.getElementById('recentActivity');
     if (!container) return;
@@ -318,17 +206,17 @@ function renderRecentActivity(workshops) {
         return;
     }
     
-    container.innerHTML = workshops.slice(0, 10).map(function(w) {
+    container.innerHTML = workshops.map(function(w) {
         return `
             <div class="activity-item">
                 <div class="activity-dot"></div>
                 <div class="activity-content">
-                    <div class="activity-title">${w.workshop || '-'}</div>
+                    <div class="activity-title">${w.workshopTitle || w.workshop || '-'}</div>
                     <div class="activity-meta">
-                        <span>👤 ${w.employee || w.employeeId || '-'}</span>
+                        <span>👤 ${w.employeeName || w.employee || '-'}</span>
                         <span>🏢 ${w.department || 'قسم غير محدد'}</span>
                         <span>⏱️ ${w.hours || 0} ساعة</span>
-                        <span>📅 ${formatDate(w.date)}</span>
+                        <span>📅 ${formatDate(w.workshopDate || w.date || w.timestamp)}</span>
                     </div>
                 </div>
             </div>
@@ -336,36 +224,7 @@ function renderRecentActivity(workshops) {
     }).join('');
 }
 
-// ============================================
-// دوال مساعدة
-// ============================================
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    try {
-        const date = new Date(dateString);
-        return date.toLocaleDateString('ar-SA', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    } catch {
-        return dateString;
-    }
-}
-
-function getBadge(count) {
-    if (count >= 100) return { emoji: '🏆', name: 'Legend', color: '#ff6b6b' };
-    if (count >= 50) return { emoji: '👑', name: 'Champion', color: '#ffd700' };
-    if (count >= 30) return { emoji: '💎', name: 'Platinum', color: '#e5e4e2' };
-    if (count >= 20) return { emoji: '🥇', name: 'Gold', color: '#ffd700' };
-    if (count >= 10) return { emoji: '🥈', name: 'Silver', color: '#c0c0c0' };
-    if (count >= 5) return { emoji: '🥉', name: 'Bronze', color: '#cd7f32' };
-    return { emoji: '🌟', name: 'Beginner', color: '#4fc3f7' };
-}
-
-// ============================================
-// تشغيل عند تحميل الصفحة وتحديث تلقائي
-// ============================================
+// تشغيل عند تحميل الصفحة
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 لوحة الشرف جاهزة');
     loadDashboardData();
