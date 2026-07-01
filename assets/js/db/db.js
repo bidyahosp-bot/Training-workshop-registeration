@@ -141,6 +141,9 @@ async function getTopEmployeesLocal(limit = 3) {
 // ============================================
 
 // ✅ تهيئة قاعدة البيانات (تحميل البيانات الأولية)
+// ============================================
+// تهيئة قاعدة البيانات (معدلة)
+// ============================================
 async function initializeDatabase() {
     try {
         console.log('📡 تهيئة قاعدة البيانات المحلية...');
@@ -149,39 +152,54 @@ async function initializeDatabase() {
         const count = await db.workshops.count();
         if (count > 0) {
             console.log('✅ البيانات موجودة محلياً:', count, 'ورشة');
+            // تحديث إحصائيات الموظفين
+            const workshops = await getAllWorkshopsLocal();
+            const employeeIds = [...new Set(workshops.map(w => w.employeeId).filter(Boolean))];
+            for (const id of employeeIds) {
+                await updateEmployeeStats(id);
+            }
             return { success: true, cached: true };
         }
         
-        // جلب البيانات من الخادم
+        // محاولة جلب البيانات من الخادم
         console.log('📡 جلب البيانات من الخادم...');
         const response = await fetch(API_URL);
+        if (!response.ok) {
+            throw new Error('فشل الاتصال بالخادم: ' + response.status);
+        }
         const result = await response.json();
         
         if (result.status === 'success' && result.data) {
             const data = result.data;
             
-            // حفظ الورش
+            // حفظ البيانات في IndexedDB
             if (data.allWorkshops && data.allWorkshops.length > 0) {
                 await db.workshops.bulkAdd(data.allWorkshops);
                 console.log('✅ تم حفظ', data.allWorkshops.length, 'ورشة');
             }
             
-            // حفظ الموظفين
             if (data.allEmployees && data.allEmployees.length > 0) {
                 await db.employees.bulkAdd(data.allEmployees);
                 console.log('✅ تم حفظ', data.allEmployees.length, 'موظف');
             }
             
             return { success: true, cached: false };
+        } else {
+            // إذا كان الرد غير ناجح
+            return { success: false, error: result.message || 'فشل في تحميل البيانات' };
         }
-        
-        return { success: false, error: 'فشل في تحميل البيانات' };
     } catch (error) {
         console.error('❌ خطأ في تهيئة قاعدة البيانات:', error);
+        // محاولة قراءة البيانات المحلية (إن وجدت)
+        try {
+            const count = await db.workshops.count();
+            if (count > 0) {
+                return { success: true, cached: true, error: error.message };
+            }
+        } catch {}
         return { success: false, error: error.message };
     }
 }
-
 // ✅ مزامنة البيانات مع الخادم (ورش غير متزامنة)
 async function syncWithServer() {
     try {
