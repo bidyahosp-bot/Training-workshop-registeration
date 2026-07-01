@@ -1,7 +1,42 @@
 // ============================================
 // Workshops JavaScript - Bidiya Training Hub
 // ============================================
+// ============================================
+// Workshops - استخدام البيانات المحلية
+// ============================================
 
+async function loadWorkshops() {
+    try {
+        // ✅ جلب البيانات من قاعدة البيانات المحلية
+        const workshops = await getAllWorkshopsLocal();
+        
+        if (workshops.length === 0) {
+            // محاولة جلب البيانات من الخادم
+            const response = await fetch(API_URL);
+            const result = await response.json();
+            if (result.status === 'success' && result.data) {
+                allWorkshops = result.data.allWorkshops || [];
+                // حفظ في قاعدة البيانات المحلية
+                await db.workshops.bulkAdd(allWorkshops);
+                // تحديث الموظفين
+                if (result.data.allEmployees) {
+                    await db.employees.bulkAdd(result.data.allEmployees);
+                }
+            }
+        } else {
+            allWorkshops = workshops;
+        }
+        
+        filteredWorkshops = [...allWorkshops];
+        populateFilters(allWorkshops);
+        renderTable();
+        updateResultsCount();
+        
+    } catch (error) {
+        console.error('Error loading workshops:', error);
+        showError('حدث خطأ في تحميل البيانات');
+    }
+}
 let allWorkshops = [];
 let filteredWorkshops = [];
 let currentPage = 1;
