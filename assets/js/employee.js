@@ -1,80 +1,39 @@
 // ============================================
 // Employee JavaScript - Bidiya Training Hub
 // ============================================
-// ============================================
-// Employee - استخدام البيانات المحلية
-// ============================================
+
+let allEmployees = [];
+let allWorkshops = [];
 
 async function loadEmployeeData() {
     try {
-        // ✅ جلب البيانات من قاعدة البيانات المحلية
-        const employees = await getAllEmployeesLocal();
+        console.log('📡 جاري تحميل بيانات الموظفين من القاعدة المحلية...');
         
-        if (employees.length === 0) {
-            showEmployeeError('لا توجد بيانات موظفين');
-            return;
-        }
-        
-        allEmployees = employees;
+        // ✅ جلب البيانات من IndexedDB
+        allEmployees = await getAllEmployeesLocal();
         allWorkshops = await getAllWorkshopsLocal();
         
-        renderEmployeeList(allEmployees);
+        console.log('👥 عدد الموظفين:', allEmployees.length);
+        console.log('📚 عدد الورش:', allWorkshops.length);
         
+        if (allEmployees.length > 0) {
+            renderEmployeeList(allEmployees);
+        } else {
+            showEmployeeError('لا توجد بيانات موظفين');
+        }
     } catch (error) {
-        console.error('Error loading employee data:', error);
+        console.error('❌ خطأ في تحميل بيانات الموظفين:', error);
         showEmployeeError('حدث خطأ في تحميل البيانات');
     }
 }
 
-// تحديث دالة viewEmployeeProfile لاستخدام البيانات المحلية
-function viewEmployeeProfile(id) {
-    // ... الكود الموجود مع تعديل البحث في allEmployees ...
-}
-let allEmployees = [];
-let allWorkshops = [];
-
-// ============================================
-// تحميل البيانات
-// ============================================
-async function loadEmployeeData() {
-    try {
-        console.log('📡 جاري تحميل بيانات الموظفين...');
-        const response = await fetch(API_URL);
-        const result = await response.json();
-        
-        if (result.status === 'success' && result.data) {
-            allEmployees = result.data.allEmployees || result.data.topEmployees || [];
-            allWorkshops = result.data.allWorkshops || result.data.recentWorkshops || [];
-            
-            console.log('✅ عدد الموظفين:', allEmployees.length);
-            console.log('✅ عدد الورش الكلي:', allWorkshops.length);
-            
-            if (allEmployees.length > 0) {
-                renderEmployeeList(allEmployees);
-            } else {
-                showMessage('لا توجد بيانات موظفين', 'warning');
-            }
-        } else {
-            showMessage('حدث خطأ في تحميل البيانات', 'error');
-        }
-    } catch (error) {
-        console.error('❌ خطأ:', error);
-        showMessage('حدث خطأ في الاتصال بالخادم', 'error');
-    }
-}
-
-// ============================================
-// عرض رسائل
-// ============================================
-function showMessage(text, type) {
+function showEmployeeError(message) {
     const container = document.getElementById('employeeList');
     if (container) {
-        const icon = type === 'error' ? 'fa-exclamation-triangle' : 'fa-info-circle';
-        const color = type === 'error' ? '#e74c3c' : '#f39c12';
         container.innerHTML = `
-            <div style="text-align:center; padding:40px;">
-                <i class="fas ${icon}" style="font-size:2rem; color:${color};"></i>
-                <p style="margin-top:10px; color:var(--text-secondary);">${text}</p>
+            <div class="error-message" style="text-align:center; padding:30px;">
+                <i class="fas fa-exclamation-triangle" style="font-size:2rem; color:#e74c3c;"></i>
+                <p style="margin-top:10px;">${message}</p>
                 <button onclick="loadEmployeeData()" class="btn-primary" style="margin-top:15px;">
                     <i class="fas fa-sync-alt"></i> إعادة المحاولة
                 </button>
@@ -83,9 +42,6 @@ function showMessage(text, type) {
     }
 }
 
-// ============================================
-// عرض قائمة الموظفين
-// ============================================
 function renderEmployeeList(employees) {
     const container = document.getElementById('employeeList');
     if (!container) return;
@@ -111,6 +67,7 @@ function renderEmployeeList(employees) {
         const name = emp.name || id;
         const dept = emp.department || 'قسم غير محدد';
         const workshops = emp.workshops || 0;
+        const hours = emp.totalHours || 0;
         const badge = getBadge(workshops);
         const icon = deptIcons[dept] || '🏢';
         
@@ -153,21 +110,17 @@ function renderEmployeeList(employees) {
     });
 }
 
-// ============================================
-// عرض الملف الشخصي
-// ============================================
-function viewEmployeeProfile(id) {
+async function viewEmployeeProfile(id) {
     if (!id) {
         alert('⚠️ يرجى إدخال رقم وظيفي أو اسم موظف');
         return;
     }
     
-    // البحث بالرقم الوظيفي
+    // البحث في allEmployees
     let employee = allEmployees.find(function(e) { 
         return e.employeeId === id; 
     });
     
-    // البحث بالاسم إذا لم يتم العثور
     if (!employee) {
         employee = allEmployees.find(function(e) { 
             return e.name === id; 
@@ -185,7 +138,6 @@ function viewEmployeeProfile(id) {
     
     console.log('✅ عرض الملف الشخصي للموظف:', employee.employeeId);
     
-    // إظهار الملف الشخصي
     const profile = document.getElementById('employeeProfile');
     if (profile) profile.style.display = 'block';
     
@@ -205,7 +157,6 @@ function viewEmployeeProfile(id) {
     document.getElementById('profileWorkshops').textContent = employee.workshops || 0;
     document.getElementById('profileHours').textContent = employee.totalHours || 0;
     
-    // الترتيب
     const rank = allEmployees.findIndex(function(e) { 
         return e.employeeId === employee.employeeId; 
     }) + 1;
@@ -214,13 +165,12 @@ function viewEmployeeProfile(id) {
     // التقدم
     updateProgress(employee.workshops || 0);
     
-    // ✅ عرض سجل الورش (مصحح)
+    // عرض ورش الموظف
     renderEmployeeWorkshops(employee.employeeId);
     
-    // ✅ عرض الإنجازات (تصميم أفقي جديد)
+    // عرض الإنجازات
     renderAchievementsHorizontal(employee.workshops || 0);
     
-    // التمرير
     if (profile) {
         setTimeout(function() {
             profile.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -228,25 +178,15 @@ function viewEmployeeProfile(id) {
     }
 }
 
-// ============================================
-// عرض سجل الورش (مصحح)
-// ============================================
 function renderEmployeeWorkshops(id) {
     const tbody = document.getElementById('profileWorkshopsBody');
-    if (!tbody) {
-        console.warn('⚠️ عنصر profileWorkshopsBody غير موجود');
-        return;
-    }
+    if (!tbody) return;
     
-    console.log('🔍 البحث عن ورش للموظف:', id);
-    console.log('📚 عدد الورش الكلي:', allWorkshops.length);
-    
-    // ✅ تصفية الورش الخاصة بالموظف
     const workshops = allWorkshops.filter(function(w) { 
-        return w.employeeId === id || w.employee === id;
+        return w.employeeId === id; 
     });
     
-    console.log('✅ عدد ورش الموظف:', workshops.length);
+    console.log('📚 عدد ورش الموظف:', workshops.length);
     
     if (!workshops || workshops.length === 0) {
         tbody.innerHTML = '<tr><td colspan="5" class="empty-row">📭 لا توجد ورش مسجلة</td></tr>';
@@ -254,11 +194,10 @@ function renderEmployeeWorkshops(id) {
     }
     
     tbody.innerHTML = workshops.map(function(w, index) {
-        // استخدام workshopTitle أو workshop
-        var title = w.workshopTitle || w.workshop || '-';
-        var hours = w.hours || 0;
-        var organizer = w.organizer || '-';
-        var date = w.workshopDate || w.date || '-';
+        const title = w.workshopTitle || w.workshop || '-';
+        const hours = w.hours || 0;
+        const organizer = w.organizer || '-';
+        const date = w.workshopDate || w.date || w.timestamp || '-';
         
         return `
             <tr>
@@ -272,9 +211,6 @@ function renderEmployeeWorkshops(id) {
     }).join('');
 }
 
-// ============================================
-// عرض الإنجازات - تصميم أفقي صغير
-// ============================================
 function renderAchievementsHorizontal(count) {
     const container = document.getElementById('achievementsContainer');
     if (!container) return;
@@ -290,7 +226,7 @@ function renderAchievementsHorizontal(count) {
     ];
     
     container.innerHTML = achievements.map(function(a) {
-        var unlocked = count >= a.min;
+        const unlocked = count >= a.min;
         return `
             <div class="achievement-horizontal ${unlocked ? 'unlocked' : 'locked'}" 
                  title="${a.name} - ${unlocked ? '✅ مكتمل' : '🔒 يحتاج ' + a.min + ' ورش'}">
@@ -302,9 +238,6 @@ function renderAchievementsHorizontal(count) {
     }).join('');
 }
 
-// ============================================
-// تحديث شريط التقدم
-// ============================================
 function updateProgress(count) {
     const levels = [
         { min: 0, max: 4, name: '🌟 Beginner', next: '🥉 Bronze (5)' },
@@ -331,37 +264,7 @@ function updateProgress(count) {
     document.getElementById('progressFill').style.width = Math.min(progress, 100) + '%';
 }
 
-// ============================================
-// دوال مساعدة
-// ============================================
-function formatDate(dateString) {
-    if (!dateString) return '-';
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return '-';
-        return date.toLocaleDateString('ar-SA', {
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric'
-        });
-    } catch {
-        return '-';
-    }
-}
-
-function getBadge(count) {
-    if (count >= 100) return { emoji: '🏆', name: 'Legend', color: '#ff6b6b' };
-    if (count >= 50) return { emoji: '👑', name: 'Champion', color: '#ffd700' };
-    if (count >= 30) return { emoji: '💎', name: 'Platinum', color: '#e5e4e2' };
-    if (count >= 20) return { emoji: '🥇', name: 'Gold', color: '#ffd700' };
-    if (count >= 10) return { emoji: '🥈', name: 'Silver', color: '#c0c0c0' };
-    if (count >= 5) return { emoji: '🥉', name: 'Bronze', color: '#cd7f32' };
-    return { emoji: '🌟', name: 'Beginner', color: '#4fc3f7' };
-}
-
-// ============================================
 // أحداث الصفحة
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 صفحة الموظف جاهزة');
     loadEmployeeData();
