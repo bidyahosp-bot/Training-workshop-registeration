@@ -6,7 +6,7 @@
 // أضف هذا السطر في <head> لجميع صفحات HTML:
 // <script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
 
-const db = new Dexie('BTHDatabase');
+const db = new Dexie('Database');
 
 // تعريف الجداول (Tables)
 db.version(1).stores({
