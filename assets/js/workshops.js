@@ -1,128 +1,114 @@
 // ============================================
 // Workshops JavaScript - Bidiya Training Hub
-// ============================================
-// ============================================
-// Workshops - استخدام البيانات المحلية
+// استخدام قاعدة البيانات المحلية (IndexedDB)
 // ============================================
 
-async function loadWorkshops() {
-    try {
-        // ✅ جلب البيانات من قاعدة البيانات المحلية
-        const workshops = await getAllWorkshopsLocal();
-        
-        if (workshops.length === 0) {
-            // محاولة جلب البيانات من الخادم
-            const response = await fetch(API_URL);
-            const result = await response.json();
-            if (result.status === 'success' && result.data) {
-                allWorkshops = result.data.allWorkshops || [];
-                // حفظ في قاعدة البيانات المحلية
-                await db.workshops.bulkAdd(allWorkshops);
-                // تحديث الموظفين
-                if (result.data.allEmployees) {
-                    await db.employees.bulkAdd(result.data.allEmployees);
-                }
-            }
-        } else {
-            allWorkshops = workshops;
-        }
-        
-        filteredWorkshops = [...allWorkshops];
-        populateFilters(allWorkshops);
-        renderTable();
-        updateResultsCount();
-        
-    } catch (error) {
-        console.error('Error loading workshops:', error);
-        showError('حدث خطأ في تحميل البيانات');
-    }
-}
 let allWorkshops = [];
 let filteredWorkshops = [];
 let currentPage = 1;
 const itemsPerPage = 20;
-const DEPT_TRANSLATIONS = {
-    ar: {
-        'الأطباء': 'الأطباء',
-        'التمريض': 'التمريض',
-        'التضميد': 'التضميد',
-        'الصيدلة': 'الصيدلة',
-        'الأشعة': 'الأشعة',
-        'الأسنان': 'الأسنان',
-        'المختبر': 'المختبر',
-        'السجلات الطبية': 'السجلات الطبية',
-        'الإدارة': 'الإدارة',
-        'التثقيف الصحي': 'التثقيف الصحي',
-        'التغذية': 'التغذية'
-    },
-    en: {
-        'الأطباء': 'Doctors',
-        'التمريض': 'Nursing',
-        'التضميد': 'Dressing',
-        'الصيدلة': 'Pharmacy',
-        'الأشعة': 'Radiology',
-        'الأسنان': 'Dentistry',
-        'المختبر': 'Laboratory',
-        'السجلات الطبية': 'Medical Records',
-        'الإدارة': 'Administration',
-        'التثقيف الصحي': 'Health Education',
-        'التغذية': 'Nutrition'
-    }
-};
 
-function translateDepartment(deptName) {
-    const lang = currentLang || 'ar';
-    if (DEPT_TRANSLATIONS[lang] && DEPT_TRANSLATIONS[lang][deptName]) {
-        return DEPT_TRANSLATIONS[lang][deptName];
-    }
-    return deptName;
-}
-// Load workshops data
+// ============================================
+// تحميل الورش من قاعدة البيانات المحلية
+// ============================================
 async function loadWorkshops() {
     try {
-        console.log('📡 جاري تحميل البيانات من API...');
-        const response = await fetch(API_URL);
-        console.log('📡 تم استلام الرد من الخادم:', response.status);
+        console.log('📡 جاري تحميل الورش من قاعدة البيانات المحلية...');
         
-        if (!response.ok) {
-            throw new Error('HTTP Error: ' + response.status);
-        }
+        // ✅ جلب البيانات من IndexedDB
+        const workshops = await getAllWorkshopsLocal();
         
-        const result = await response.json();
-        console.log('📡 البيانات المستلمة:', result);
-
-        if (result.status === 'success' && result.data) {
-            allWorkshops = result.data.allWorkshops || result.data.recentWorkshops || [];
-            console.log('✅ عدد الورش المستلمة:', allWorkshops.length);
+        if (workshops && workshops.length > 0) {
+            console.log('✅ تم جلب', workshops.length, 'ورشة من قاعدة البيانات المحلية');
+            allWorkshops = workshops;
+            filteredWorkshops = [...allWorkshops];
             
-            if (allWorkshops.length === 0) {
-                showError('⚠️ لا توجد ورش تدريبية مسجلة حالياً.');
-            } else {
-                filteredWorkshops = [...allWorkshops];
-                populateFilters(allWorkshops);
-                renderTable();
-                updateResultsCount();
-            }
+            populateFilters(allWorkshops);
+            renderTable();
+            updateResultsCount();
+            
+            // ✅ تحديث إحصائيات الموظفين في الخلفية
+            await updateAllEmployeesStats();
+            
         } else {
-            console.warn('⚠️ API response error:', result);
-            showError('حدث خطأ في تحميل البيانات من الخادم: ' + (result.message || 'خطأ غير معروف'));
+            console.log('📡 لا توجد بيانات محلية، جاري التحميل من الخادم...');
+            
+            // محاولة جلب البيانات من الخادم
+            try {
+                const response = await fetch(API_URL);
+                const result = await response.json();
+                
+                if (result.status === 'success' && result.data) {
+                    const data = result.data;
+                    
+                    // حفظ الورش في قاعدة البيانات المحلية
+                    if (data.allWorkshops && data.allWorkshops.length > 0) {
+                        await db.workshops.bulkAdd(data.allWorkshops);
+                        allWorkshops = data.allWorkshops;
+                        console.log('✅ تم حفظ', allWorkshops.length, 'ورشة من الخادم');
+                    }
+                    
+                    // حفظ الموظفين
+                    if (data.allEmployees && data.allEmployees.length > 0) {
+                        await db.employees.bulkAdd(data.allEmployees);
+                    }
+                    
+                    filteredWorkshops = [...allWorkshops];
+                    populateFilters(allWorkshops);
+                    renderTable();
+                    updateResultsCount();
+                } else {
+                    showError('لا توجد بيانات متاحة حالياً');
+                }
+            } catch (fetchError) {
+                console.error('❌ خطأ في جلب البيانات من الخادم:', fetchError);
+                showError('حدث خطأ في الاتصال بالخادم. يرجى المحاولة لاحقاً.');
+            }
         }
+        
     } catch (error) {
-        console.error('❌ Error loading workshops:', error);
-        showError('❌ حدث خطأ في الاتصال بالخادم. تحقق من الرابط: ' + API_URL);
+        console.error('❌ خطأ في تحميل الورش:', error);
+        showError('حدث خطأ في تحميل البيانات');
     }
 }
 
-// Show error message on page
+// ============================================
+// تحديث إحصائيات جميع الموظفين
+// ============================================
+async function updateAllEmployeesStats() {
+    try {
+        const workshops = await getAllWorkshopsLocal();
+        const employeeIds = [...new Set(workshops.map(w => w.employeeId).filter(Boolean))];
+        
+        for (const id of employeeIds) {
+            await updateEmployeeStats(id);
+        }
+        console.log('✅ تم تحديث إحصائيات', employeeIds.length, 'موظف');
+    } catch (error) {
+        console.error('❌ خطأ في تحديث إحصائيات الموظفين:', error);
+    }
+}
+
+// ============================================
+// تحديث البيانات عند التغيير
+// ============================================
+async function refreshWorkshops() {
+    console.log('🔄 تحديث سجل الورش...');
+    await loadWorkshops();
+}
+
+// ============================================
+// عرض رسالة خطأ
+// ============================================
 function showError(message) {
     const tbody = document.getElementById('workshopsBody');
     if (tbody) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="error-row">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <p style="margin-top: 10px;">${message}</p>
-                    <button onclick="loadWorkshops()" class="btn-primary" style="margin-top: 15px;">
+                    <i class="fas fa-exclamation-triangle" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
+                    <p>${message}</p>
+                    <button onclick="loadWorkshops()" class="btn-primary" style="margin-top:15px;">
                         <i class="fas fa-sync-alt"></i> إعادة المحاولة
                     </button>
                 </td>
@@ -131,14 +117,19 @@ function showError(message) {
     }
 }
 
-// Populate filter dropdowns
+// ============================================
+// تعبئة خيارات التصفية
+// ============================================
 function populateFilters(workshops) {
     const departments = [...new Set(workshops.map(w => w.department).filter(Boolean))];
     const years = [...new Set(workshops.map(w => {
-        try { return new Date(w.date).getFullYear(); } catch { return null; }
+        try { 
+            const date = new Date(w.workshopDate || w.date || w.timestamp);
+            return date.getFullYear();
+        } catch { return null; }
     }).filter(Boolean))];
     
-    // تعبئة فلتر الأقسام مع ترجمة
+    // تعبئة فلتر الأقسام
     const deptSelect = document.getElementById('filterDepartment');
     if (deptSelect) {
         const allOption = deptSelect.querySelector('option[value="all"]');
@@ -148,31 +139,22 @@ function populateFilters(workshops) {
         } else {
             const option = document.createElement('option');
             option.value = 'all';
-            option.textContent = t('all_departments') || 'جميع الأقسام';
+            option.textContent = 'جميع الأقسام';
             deptSelect.appendChild(option);
         }
         
         const deptIcons = {
-            'الأطباء': '👨‍⚕️',
-            'التمريض': '👩‍⚕️',
-            'التضميد': '🩹',
-            'الصيدلة': '💊',
-            'الأشعة': '📷',
-            'الأسنان': '🦷',
-            'المختبر': '🔬',
-            'السجلات الطبية': '📋',
-            'الإدارة': '📊',
-            'التثقيف الصحي': '📚',
-            'التغذية': '🍎'
+            'الأطباء': '👨‍⚕️', 'التمريض': '👩‍⚕️', 'التضميد': '🩹',
+            'الصيدلة': '💊', 'الأشعة': '📷', 'الأسنان': '🦷',
+            'المختبر': '🔬', 'السجلات الطبية': '📋', 'الإدارة': '📊',
+            'التثقيف الصحي': '📚', 'التغذية': '🍎'
         };
         
-        departments.sort().forEach(function(dept) {
+        departments.sort().forEach(dept => {
             const option = document.createElement('option');
             option.value = dept;
             const icon = deptIcons[dept] || '🏢';
-            // ✅ استخدام الترجمة
-            const translatedName = translateDepartment(dept);
-            option.textContent = icon + ' ' + translatedName;
+            option.textContent = icon + ' ' + dept;
             deptSelect.appendChild(option);
         });
     }
@@ -200,7 +182,9 @@ function populateFilters(workshops) {
     }
 }
 
-// Apply filters
+// ============================================
+// تطبيق الفلاتر
+// ============================================
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const department = document.getElementById('filterDepartment').value;
@@ -208,25 +192,33 @@ function applyFilters() {
     const month = document.getElementById('filterMonth').value;
 
     filteredWorkshops = allWorkshops.filter(w => {
+        // البحث
         const matchSearch = !searchTerm ||
-            (w.employee && w.employee.toLowerCase().includes(searchTerm)) ||
+            (w.employeeName && w.employeeName.toLowerCase().includes(searchTerm)) ||
             (w.employeeId && w.employeeId.toLowerCase().includes(searchTerm)) ||
             (w.department && w.department.toLowerCase().includes(searchTerm)) ||
-            (w.workshop && w.workshop.toLowerCase().includes(searchTerm)) ||
+            (w.workshopTitle && w.workshopTitle.toLowerCase().includes(searchTerm)) ||
             (w.organizer && w.organizer.toLowerCase().includes(searchTerm));
 
+        // القسم
         const matchDept = department === 'all' || w.department === department;
 
+        // السنة
         let matchYear = true;
-        if (year !== 'all' && w.date) {
-            try { matchYear = new Date(w.date).getFullYear() === parseInt(year); }
-            catch { matchYear = false; }
+        if (year !== 'all') {
+            try {
+                const date = new Date(w.workshopDate || w.date || w.timestamp);
+                matchYear = date.getFullYear() === parseInt(year);
+            } catch { matchYear = false; }
         }
 
+        // الشهر
         let matchMonth = true;
-        if (month !== 'all' && w.date) {
-            try { matchMonth = new Date(w.date).getMonth() + 1 === parseInt(month); }
-            catch { matchMonth = false; }
+        if (month !== 'all') {
+            try {
+                const date = new Date(w.workshopDate || w.date || w.timestamp);
+                matchMonth = date.getMonth() + 1 === parseInt(month);
+            } catch { matchMonth = false; }
         }
 
         return matchSearch && matchDept && matchYear && matchMonth;
@@ -237,7 +229,9 @@ function applyFilters() {
     updateResultsCount();
 }
 
-// Render table with pagination
+// ============================================
+// عرض الجدول مع ترقيم الصفحات
+// ============================================
 function renderTable() {
     const tbody = document.getElementById('workshopsBody');
     if (!tbody) return;
@@ -246,11 +240,11 @@ function renderTable() {
     const end = start + itemsPerPage;
     const pageItems = filteredWorkshops.slice(start, end);
 
-    if (!pageItems.length) {
+    if (!pageItems || pageItems.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="8" class="empty-row">
-                    <i class="fas fa-inbox"></i>
+                    <i class="fas fa-inbox" style="font-size:2rem; display:block; margin-bottom:10px;"></i>
                     لا توجد ورش تدريبية مطابقة للبحث
                 </td>
             </tr>
@@ -260,16 +254,17 @@ function renderTable() {
     }
 
     tbody.innerHTML = pageItems.map(function(w, index) {
+        const dateStr = w.workshopDate || w.date || w.timestamp || '';
         return `
             <tr>
                 <td>${start + index + 1}</td>
                 <td><strong>${w.employeeId || '-'}</strong></td>
-                <td>${w.employee || '-'}</td>
+                <td>${w.employeeName || w.employee || '-'}</td>
                 <td>${w.department || '-'}</td>
-                <td>${w.workshop || '-'}</td>
+                <td>${w.workshopTitle || w.workshop || '-'}</td>
                 <td>${w.hours || 0}</td>
                 <td>${w.organizer || '-'}</td>
-                <td>${formatDate(w.date)}</td>
+                <td>${formatDate(dateStr)}</td>
             </tr>
         `;
     }).join('');
@@ -277,7 +272,9 @@ function renderTable() {
     renderPagination();
 }
 
-// Render pagination
+// ============================================
+// عرض أزرار الترقيم
+// ============================================
 function renderPagination() {
     const container = document.getElementById('pagination');
     if (!container) return;
@@ -303,30 +300,37 @@ function renderPagination() {
     });
 }
 
-// Update results count
+// ============================================
+// تحديث عدد النتائج
+// ============================================
 function updateResultsCount() {
     const el = document.getElementById('resultsCount');
     if (el) el.textContent = filteredWorkshops.length;
 }
 
-// Export to Excel
+// ============================================
+// تصدير إلى Excel
+// ============================================
 function exportToExcel() {
-    if (!filteredWorkshops.length) {
+    if (!filteredWorkshops || filteredWorkshops.length === 0) {
         alert('لا توجد بيانات للتصدير');
         return;
     }
     
     const headers = ['#', 'الرقم الوظيفي', 'الموظف', 'القسم', 'عنوان الورشة', 'الساعات', 'الجهة المنظمة', 'التاريخ'];
-    const rows = filteredWorkshops.map((w, index) => [
-        index + 1,
-        w.employeeId || '',
-        w.employee || '',
-        w.department || '',
-        w.workshop || '',
-        w.hours || 0,
-        w.organizer || '',
-        formatDate(w.date)
-    ]);
+    const rows = filteredWorkshops.map(function(w, index) {
+        const dateStr = w.workshopDate || w.date || w.timestamp || '';
+        return [
+            index + 1,
+            w.employeeId || '',
+            w.employeeName || w.employee || '',
+            w.department || '',
+            w.workshopTitle || w.workshop || '',
+            w.hours || 0,
+            w.organizer || '',
+            formatDate(dateStr)
+        ];
+    });
 
     const csv = [headers.join(','), ...rows.map(row => row.join(','))].join('\n');
     const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
@@ -336,8 +340,29 @@ function exportToExcel() {
     link.click();
 }
 
-// Event listeners
+// ============================================
+// تنسيق التاريخ
+// ============================================
+function formatDate(dateString) {
+    if (!dateString) return '-';
+    try {
+        const date = new Date(dateString);
+        if (isNaN(date.getTime())) return '-';
+        return date.toLocaleDateString('ar-SA', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
+        });
+    } catch {
+        return '-';
+    }
+}
+
+// ============================================
+// أحداث الصفحة
+// ============================================
 document.addEventListener('DOMContentLoaded', function() {
+    console.log('📄 صفحة سجل الورش جاهزة');
     loadWorkshops();
 
     const searchInput = document.getElementById('searchInput');
@@ -374,3 +399,21 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.addEventListener('click', exportToExcel);
 });
+
+// ============================================
+// الاستماع لتحديثات البيانات من صفحات أخرى
+// ============================================
+window.addEventListener('storage', function(e) {
+    if (e.key === 'bth_workshops_updated') {
+        console.log('🔄 تم تحديث البيانات من صفحة أخرى، جاري التحديث...');
+        loadWorkshops();
+    }
+});
+
+// ✅ الاستماع لتحديثات المزامنة
+document.addEventListener('workshopsUpdated', function() {
+    console.log('🔄 تم تحديث البيانات، جاري التحديث...');
+    loadWorkshops();
+});
+
+console.log('✅ workshops.js تم تحميله بنجاح');
