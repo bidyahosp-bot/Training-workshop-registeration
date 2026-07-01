@@ -1,48 +1,53 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- Dexie.js - قاعدة البيانات المحلية -->
-<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
-
-<!-- قاعدة البيانات المحلية -->
-<script src="assets/js/db/db.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>التقارير - Bidiya Hospital Training Hub</title>
-    
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/dark-mode.css">
-    <!-- PWA Meta Tags -->
-<link rel="manifest" href="/Training-workshop-registration/manifest.json">
-    <meta name="theme-color" content="#1a7a3a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BTH">
-<link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
-<!-- PWA Splash Screen (iOS) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-startup-image" href="assets/icons/splash.png">
+    <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a7a3a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BTH">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
+
+    <!-- ======================== -->
+    <!--  Dark Mode Toggle        -->
+    <!-- ======================== -->
     <button class="dark-toggle" id="darkToggle"><i class="fas fa-moon"></i></button>
-    
-    <!-- Language Selector -->
+
+    <!-- ======================== -->
+    <!--  Language Selector       -->
+    <!-- ======================== -->
     <div class="lang-selector">
         <button class="lang-btn active" data-lang="ar">🇸🇦 عربي</button>
         <button class="lang-btn" data-lang="en">🇬🇧 English</button>
     </div>
 
-    <!-- HEADER -->
+    <!-- ======================== -->
+    <!--  HEADER                  -->
+    <!-- ======================== -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img">
+                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img" onerror="this.style.display='none'">
                     <div>
                         <h1 class="logo-title" data-i18n="app_name">منصة مستشفى بدية للتدريب والتطوير المهني</h1>
                         <p class="logo-tagline" data-i18n="tagline">نتعلم اليوم... لنرعى أفضل غدًا</p>
@@ -61,9 +66,13 @@
         </div>
     </header>
 
-    <!-- REPORTS PAGE -->
+    <!-- ======================== -->
+    <!--  REPORTS PAGE            -->
+    <!-- ======================== -->
     <section class="reports-page">
         <div class="container">
+
+            <!-- Page Header -->
             <div class="page-header">
                 <h1>📊 <span data-i18n="reports_title">التقارير والإحصائيات</span></h1>
                 <p data-i18n="reports_subtitle">تحليل شامل لأداء التدريب في مستشفى بدية</p>
@@ -188,10 +197,13 @@
                 <span data-i18n="last_updated">آخر تحديث:</span>
                 <span id="lastUpdated">-</span>
             </div>
+
         </div>
     </section>
 
-    <!-- FOOTER -->
+    <!-- ======================== -->
+    <!--  FOOTER                  -->
+    <!-- ======================== -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -229,6 +241,9 @@
         </div>
     </footer>
 
+    <!-- ======================== -->
+    <!--  SCRIPTS                 -->
+    <!-- ======================== -->
     <script src="assets/js/i18n.js"></script>
     <script src="assets/js/main.js"></script>
     <script src="assets/js/reports.js"></script>
