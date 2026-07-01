@@ -1,6 +1,6 @@
 // ============================================
 // Register JavaScript - Bidiya Training Hub
-// الحفظ المحلي أولاً مع مزامنة الخادم
+// الإرسال مباشرة إلى الخادم (API)
 // ============================================
 
 document.addEventListener('DOMContentLoaded', async function() {
@@ -17,7 +17,26 @@ document.addEventListener('DOMContentLoaded', async function() {
     // تعبئة قائمة الأقسام
     const departmentSelect = document.getElementById('department');
     if (departmentSelect) {
-        await populateDepartments(departmentSelect);
+        // استخدام الأقسام الثابتة (لأن populateDepartments يعتمد على API قد لا يعمل)
+        const departments = [
+            'الأطباء', 'التمريض', 'التضميد', 'الصيدلة',
+            'الأشعة', 'الأسنان', 'المختبر', 'السجلات الطبية',
+            'الإدارة', 'التثقيف الصحي', 'التغذية'
+        ];
+        
+        // الاحتفاظ بالخيار الأول
+        departmentSelect.innerHTML = '';
+        const defaultOption = document.createElement('option');
+        defaultOption.value = '';
+        defaultOption.textContent = 'اختر القسم';
+        departmentSelect.appendChild(defaultOption);
+        
+        departments.forEach(function(dept) {
+            const option = document.createElement('option');
+            option.value = dept;
+            option.textContent = dept;
+            departmentSelect.appendChild(option);
+        });
     }
     
     // التحقق من صحة الساعات
@@ -39,7 +58,7 @@ document.addEventListener('DOMContentLoaded', async function() {
     }
     
     // ============================================
-    // إرسال النموذج - الحفظ المحلي أولاً
+    // إرسال النموذج إلى الخادم مباشرة
     // ============================================
     if (form) {
         form.addEventListener('submit', async function(e) {
@@ -94,47 +113,37 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             try {
                 // ============================================
-                // 1. حفظ البيانات محلياً أولاً (IndexedDB)
+                // إرسال البيانات إلى الخادم (API)
                 // ============================================
-                const localResult = await addWorkshopLocal(workshopData);
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(workshopData)
+                });
                 
-                if (localResult.success) {
-                    // ✅ عرض رسالة نجاح فورية
-                    showNotification('✅ تم تسجيل الورشة محلياً بنجاح!', 'success');
+                const result = await response.json();
+                
+                if (result.status === 'success') {
+                    // ✅ نجاح التسجيل
+                    showNotification('✅ تم تسجيل الورشة بنجاح!', 'success');
                     
                     // إعادة تعيين النموذج
                     form.reset();
                     if (dateInput) dateInput.value = today;
                     
-                    // تحديث الواجهة فوراً
+                    // تحديث جميع الصفحات
                     refreshAllPages();
                     
-                    // ============================================
-                    // 2. مزامنة مع الخادم في الخلفية
-                    // ============================================
-                    if (navigator.onLine) {
-                        // مزامنة جميع البيانات غير المتزامنة
-                        const syncResult = await syncWithServer();
-                        if (syncResult.success && syncResult.synced > 0) {
-                            showNotification('✅ تمت المزامنة مع الخادم (' + syncResult.synced + ' ورشة)', 'success');
-                        } else if (syncResult.success && syncResult.synced === 0) {
-                            console.log('✅ لا توجد بيانات جديدة للمزامنة');
-                        } else {
-                            console.warn('⚠️ مشكلة في المزامنة:', syncResult.error);
-                        }
-                    } else {
-                        // إذا كان غير متصل، أظهر رسالة
-                        showNotification('📴 سيتم مزامنة البيانات عند استعادة الاتصال بالإنترنت', 'info');
-                    }
-                    
                 } else {
-                    // ❌ فشل الحفظ المحلي
-                    alert('❌ حدث خطأ في حفظ البيانات محلياً: ' + localResult.error);
+                    // ❌ فشل التسجيل
+                    alert('❌ حدث خطأ في التسجيل: ' + (result.message || 'يرجى المحاولة مرة أخرى'));
                 }
                 
             } catch (error) {
                 console.error('❌ خطأ:', error);
-                alert('❌ حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
+                alert('❌ حدث خطأ في الاتصال بالخادم. يرجى المحاولة مرة أخرى.');
             } finally {
                 // إعادة الزر إلى حالته الأصلية
                 submitBtn.innerHTML = originalText;
@@ -218,40 +227,4 @@ function refreshAllPages() {
     console.log('✅ تم تحديث جميع الصفحات');
 }
 
-// ✅ التحقق من اتصال الإنترنت
-window.addEventListener('online', function() {
-    console.log('🌐 تم استعادة الاتصال بالإنترنت');
-    showNotification('🌐 تم استعادة الاتصال بالإنترنت. جاري المزامنة...', 'info');
-    
-    // مزامنة البيانات عند استعادة الاتصال
-    syncWithServer().then(result => {
-        if (result.success && result.synced > 0) {
-            showNotification('✅ تمت مزامنة ' + result.synced + ' ورشة مع الخادم', 'success');
-            refreshAllPages();
-        }
-    });
-});
-
-window.addEventListener('offline', function() {
-    console.log('📴 تم فقدان الاتصال بالإنترنت');
-    showNotification('📴 أنت غير متصل. سيتم حفظ البيانات محلياً.', 'warning');
-});
-// في نهاية دالة addWorkshopLocal، أضف استدعاء broadcastUpdate
-// أو استخدم الكود التالي في register.js بعد الحفظ المحلي:
-
-// بعد حفظ الورشة محلياً
-if (localResult.success) {
-    // ... الكود الموجود ...
-    
-    // ✅ إرسال إشارة تحديث لجميع الصفحات
-    try {
-        localStorage.setItem('bth_workshops_updated', Date.now().toString());
-        const event = new CustomEvent('workshopsUpdated');
-        document.dispatchEvent(event);
-        console.log('📡 تم إرسال إشارة تحديث');
-    } catch (e) {
-        console.warn('⚠️ خطأ في إرسال إشارة التحديث:', e);
-    }
-}
-
-console.log('✅ register.js تم تحميله بنجاح مع دعم الحفظ المحلي');
+console.log('✅ register.js تم تحميله بنجاح (نسخة API)');
