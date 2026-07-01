@@ -474,3 +474,50 @@ document.addEventListener('DOMContentLoaded', function() {
         initApp();
     }
 });
+// ============================================
+// الاستماع لتحديثات البيانات
+// ============================================
+
+// ✅ الاستماع لتغييرات localStorage من صفحات أخرى
+window.addEventListener('storage', function(e) {
+    if (e.key === 'bth_workshops_updated') {
+        console.log('🔄 تم تحديث البيانات من صفحة أخرى، جاري التحديث...');
+        refreshAllPages();
+    }
+});
+
+// ✅ الاستماع للحدث المخصص
+document.addEventListener('workshopsUpdated', function() {
+    console.log('🔄 تم تحديث البيانات، جاري التحديث...');
+    refreshAllPages();
+});
+
+// ✅ دالة تحديث جميع الصفحات
+function refreshAllPages() {
+    // تحديث الصفحة الرئيسية
+    if (typeof loadHomePageData === 'function') {
+        loadHomePageData();
+    }
+    
+    // تحديث لوحة الشرف
+    if (typeof loadDashboardData === 'function') {
+        loadDashboardData();
+    }
+    
+    // تحديث سجل الورش
+    if (typeof loadWorkshops === 'function') {
+        loadWorkshops();
+    }
+    
+    // تحديث صفحة الموظف
+    if (typeof loadEmployeeData === 'function') {
+        loadEmployeeData();
+    }
+    
+    // تحديث التقارير
+    if (typeof loadReportData === 'function') {
+        loadReportData();
+    }
+    
+    console.log('✅ تم تحديث جميع الصفحات');
+}
