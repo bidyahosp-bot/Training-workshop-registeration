@@ -1,47 +1,50 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <!-- Dexie.js - قاعدة البيانات المحلية -->
-<script src="https://cdn.jsdelivr.net/npm/dexie@3.2.4/dist/dexie.min.js"></script>
-
-<!-- قاعدة البيانات المحلية -->
-<script src="assets/js/db/db.js"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>صفحة الموظف - Bidiya Hospital Training Hub</title>
-    
+
+    <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/dark-mode.css">
-    <!-- PWA Meta Tags -->
-<link rel="manifest" href="/Training-workshop-registration/manifest.json">
-<meta name="theme-color" content="#1a7a3a">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="BTH">
-<link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 
-<!-- PWA Splash Screen (iOS) -->
-<meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="apple-touch-startup-image" href="assets/icons/splash.png">
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#1a7a3a">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="BTH">
+    <link rel="apple-touch-icon" href="assets/icons/icon-192x192.png">
 </head>
 <body>
-    <!-- Dark Mode Toggle -->
+
+    <!-- ======================== -->
+    <!--  Dark Mode Toggle        -->
+    <!-- ======================== -->
     <button class="dark-toggle" id="darkToggle"><i class="fas fa-moon"></i></button>
-    
-    <!-- Language Selector -->
+
+    <!-- ======================== -->
+    <!--  Language Selector       -->
+    <!-- ======================== -->
     <div class="lang-selector">
         <button class="lang-btn active" data-lang="ar">🇸🇦 عربي</button>
         <button class="lang-btn" data-lang="en">🇬🇧 English</button>
     </div>
 
-    <!-- HEADER -->
+    <!-- ======================== -->
+    <!--  HEADER                  -->
+    <!-- ======================== -->
     <header class="header">
         <div class="container">
             <div class="header-content">
                 <div class="logo">
-                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img">
+                    <img src="assets/img/logo.png" alt="BTH Logo" class="logo-img" onerror="this.style.display='none'">
                     <div>
                         <h1 class="logo-title" data-i18n="app_name">منصة مستشفى بدية للتدريب والتطوير المهني</h1>
                         <p class="logo-tagline" data-i18n="tagline">نتعلم اليوم... لنرعى أفضل غدًا</p>
@@ -60,15 +63,19 @@
         </div>
     </header>
 
-    <!-- EMPLOYEE PROFILE -->
+    <!-- ======================== -->
+    <!--  EMPLOYEE PAGE           -->
+    <!-- ======================== -->
     <section class="employee-page">
         <div class="container">
+
+            <!-- Page Header -->
             <div class="page-header">
                 <h1>👤 <span data-i18n="employee_profile">صفحة الموظف</span></h1>
                 <p data-i18n="employee_profile_subtitle">عرض إنجازاتك التدريبية ومسار التعلم</p>
             </div>
 
-            <!-- 🔍 Search -->
+            <!-- Search -->
             <div class="employee-search">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
@@ -81,7 +88,7 @@
                 </button>
             </div>
 
-            <!-- 📋 Profile Card -->
+            <!-- Profile Card -->
             <div id="employeeProfile" class="employee-profile" style="display: none;">
                 <div class="profile-header">
                     <div class="profile-avatar">
@@ -109,7 +116,7 @@
                     </div>
                 </div>
 
-                <!-- 📊 Progress -->
+                <!-- Progress -->
                 <div class="profile-progress">
                     <h3><i class="fas fa-chart-line"></i> <span data-i18n="progress">التقدم نحو الشارة التالية</span></h3>
                     <div class="progress-container">
@@ -123,7 +130,7 @@
                     </div>
                 </div>
 
-                <!-- 📚 Workshop History -->
+                <!-- Workshop History -->
                 <div class="profile-history">
                     <h3><i class="fas fa-history"></i> <span data-i18n="workshop_history">سجل الورش</span></h3>
                     <div class="table-container">
@@ -144,26 +151,29 @@
                     </div>
                 </div>
 
-                <!-- 🏅 Achievements -->
+                <!-- Achievements -->
                 <div class="profile-achievements">
-    <h3><i class="fas fa-trophy"></i> <span data-i18n="achievements">الإنجازات</span></h3>
-    <div id="achievementsContainer" class="achievements-horizontal">
-        <!-- سيتم ملؤها بواسطة JavaScript -->
-    </div>
-</div>
+                    <h3><i class="fas fa-trophy"></i> <span data-i18n="achievements">الإنجازات</span></h3>
+                    <div id="achievementsContainer" class="achievements-horizontal">
+                        <!-- سيتم ملؤها بواسطة JavaScript -->
+                    </div>
+                </div>
             </div>
 
-            <!-- 📋 Employee List -->
+            <!-- Employee List -->
             <div class="employee-list-section">
                 <h2><i class="fas fa-users"></i> <span data-i18n="top_employees">قائمة أفضل الموظفين</span></h2>
                 <div id="employeeList" class="employee-list">
                     <!-- سيتم ملؤها بواسطة JavaScript -->
                 </div>
             </div>
+
         </div>
     </section>
 
-    <!-- FOOTER -->
+    <!-- ======================== -->
+    <!--  FOOTER                  -->
+    <!-- ======================== -->
     <footer class="footer">
         <div class="container">
             <div class="footer-content">
@@ -201,8 +211,16 @@
         </div>
     </footer>
 
+    <!-- ======================== -->
+    <!--  SCRIPTS                 -->
+    <!-- ======================== -->
+    <!-- 1. الترجمة -->
     <script src="assets/js/i18n.js"></script>
+    
+    <!-- 2. الملف الرئيسي (API + دوال عامة) -->
     <script src="assets/js/main.js"></script>
+    
+    <!-- 3. صفحة الموظف -->
     <script src="assets/js/employee.js"></script>
 </body>
 </html>
