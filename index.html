@@ -230,7 +230,7 @@
         
         // PWA - تسجيل Service Worker
         if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
+            navigator.serviceWorker.register('sw.js')  // مسار نسبي، سيبحث في نفس المجلد الذي فيه الصفحة
                 .then(() => console.log('✅ Service Worker مسجل'))
                 .catch(err => console.log('❌ Service Worker:', err));
         }
