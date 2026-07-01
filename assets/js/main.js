@@ -2,7 +2,7 @@
 // Main JavaScript - Bidiya Training Hub
 // ============================================
 
-// 🔗 API URL
+// 🔗 API URL - تأكد من صحة الرابط
 const API_URL = 'https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnTOyl_vdUwzDvqVUhgJ7TpH2qo59NHYgvXbdp2nVptsFTuHdGhKOX-5c9Hb1FTwGmPPFiUM87hP0hiuQFbkeGjqOiXMsCuUup8ZzBAwaDZVomxRcl8vLXZFdaJr2ei7JPMP0oCDpLkOyf4RGsBtNKJUQwa7ZBVyEJIEdU2pMbaaoHr3DKJ_2rP8tzl5SrhjURH0x32ExZcvumkJ90CCsHCl4UJhlaoHGGd2ELFg-eXWl_njhpdwxzf3IvX7PTbbFnxyXtQNpZFSODEVVW2pCLLqjgdjjw&lib=MxvoKb8cGSRuqCGbK6pgVcBMD4LCh1O-7';
 
 let dbInitialized = false;
@@ -12,33 +12,57 @@ let dbInitialized = false;
 // ============================================
 async function initApp() {
     console.log('🚀 بدء تهيئة التطبيق...');
-    
     showLoadingMessage('جاري تحميل البيانات...');
-    
-    const result = await initializeDatabase();
-    
-    if (result.success) {
-        dbInitialized = true;
-        console.log('✅ تم تهيئة قاعدة البيانات بنجاح');
+
+    try {
+        // محاولة تهيئة قاعدة البيانات
+        const result = await initializeDatabase();
         
-        // مزامنة في الخلفية
-        if (navigator.onLine) {
-            setTimeout(() => {
+        if (result.success) {
+            dbInitialized = true;
+            console.log('✅ تم تهيئة قاعدة البيانات بنجاح');
+            
+            // محاولة المزامنة في الخلفية
+            if (navigator.onLine) {
                 syncWithServer().then(syncResult => {
                     if (syncResult.success && syncResult.synced > 0) {
                         console.log('✅ تمت المزامنة:', syncResult.synced, 'ورشة');
                         refreshAllPages();
                     }
+                }).catch(err => {
+                    console.warn('⚠️ فشلت المزامنة الخلفية:', err);
                 });
-            }, 2000);
+            }
+            
+            // تحديث الواجهة فوراً
+            refreshAllPages();
+        } else {
+            // إذا فشلت التهيئة، نحاول عرض البيانات المحلية إن وجدت
+            console.warn('⚠️ فشل التهيئة، محاولة عرض البيانات المحلية');
+            const count = await db.workshops.count();
+            if (count > 0) {
+                refreshAllPages();
+                showNotification('تم تحميل البيانات المحلية', 'warning');
+            } else {
+                showErrorMessage('فشل تحميل البيانات. يرجى التحقق من الاتصال بالإنترنت.');
+            }
         }
-        
-        // تحديث جميع الصفحات
-        refreshAllPages();
+    } catch (error) {
+        console.error('❌ خطأ في التهيئة:', error);
+        // محاولة عرض البيانات المحلية
+        try {
+            const count = await db.workshops.count();
+            if (count > 0) {
+                refreshAllPages();
+                showNotification('تم تحميل البيانات المحلية مؤقتًا', 'warning');
+            } else {
+                showErrorMessage('حدث خطأ في تهيئة النظام. يرجى تحديث الصفحة.');
+            }
+        } catch {
+            showErrorMessage('حدث خطأ غير متوقع. يرجى تحديث الصفحة.');
+        }
+    } finally {
         hideLoadingMessage();
-    } else {
-        console.error('❌ فشل تهيئة قاعدة البيانات:', result.error);
-        showErrorMessage('فشل تحميل البيانات. يرجى التحقق من الاتصال بالإنترنت.');
     }
 }
 
@@ -48,36 +72,20 @@ async function initApp() {
 function refreshAllPages() {
     console.log('🔄 تحديث جميع الصفحات...');
     
-    // الصفحة الرئيسية
-    if (typeof loadHomePageData === 'function') {
-        loadHomePageData();
+    try {
+        if (typeof loadHomePageData === 'function') loadHomePageData();
+        if (typeof loadDashboardData === 'function') loadDashboardData();
+        if (typeof loadWorkshops === 'function') loadWorkshops();
+        if (typeof loadEmployeeData === 'function') loadEmployeeData();
+        if (typeof loadReportData === 'function') loadReportData();
+        console.log('✅ تم تحديث جميع الصفحات');
+    } catch (error) {
+        console.warn('⚠️ خطأ في تحديث بعض الصفحات:', error);
     }
-    
-    // لوحة الشرف
-    if (typeof loadDashboardData === 'function') {
-        loadDashboardData();
-    }
-    
-    // سجل الورش
-    if (typeof loadWorkshops === 'function') {
-        loadWorkshops();
-    }
-    
-    // صفحة الموظف
-    if (typeof loadEmployeeData === 'function') {
-        loadEmployeeData();
-    }
-    
-    // التقارير
-    if (typeof loadReportData === 'function') {
-        loadReportData();
-    }
-    
-    console.log('✅ تم تحديث جميع الصفحات');
 }
 
 // ============================================
-// الصفحة الرئيسية - تحميل البيانات
+// الصفحة الرئيسية
 // ============================================
 async function loadHomePageData() {
     try {
@@ -88,7 +96,6 @@ async function loadHomePageData() {
         const totalHours = workshops.reduce((sum, w) => sum + (w.hours || 0), 0);
         const totalEmployees = employees.length;
         
-        // تحديث العدادات
         const el1 = document.getElementById('totalWorkshops');
         const el2 = document.getElementById('totalHours');
         const el3 = document.getElementById('totalEmployees');
@@ -141,7 +148,7 @@ function showLoadingMessage(message) {
             left: 0;
             right: 0;
             bottom: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.6);
             backdrop-filter: blur(8px);
             display: flex;
             flex-direction: column;
@@ -151,7 +158,7 @@ function showLoadingMessage(message) {
             transition: opacity 0.5s ease;
         `;
         loader.innerHTML = `
-            <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 350px;">
+            <div style="background: var(--bg-card); padding: 30px 40px; border-radius: 20px; text-align: center; max-width: 350px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
                 <div class="spinner" style="width: 40px; height: 40px; border: 4px solid var(--primary-light); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 15px;"></div>
                 <p id="loaderMessage" style="color: var(--text-primary); font-weight: 600; font-size: 1rem;">${message}</p>
             </div>
