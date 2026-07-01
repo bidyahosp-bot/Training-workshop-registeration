@@ -1,6 +1,5 @@
 // ============================================
 // Workshops JavaScript - Bidiya Training Hub
-// استخدام قاعدة البيانات المحلية (IndexedDB)
 // ============================================
 
 let allWorkshops = [];
@@ -9,97 +8,36 @@ let currentPage = 1;
 const itemsPerPage = 20;
 
 // ============================================
-// تحميل الورش من قاعدة البيانات المحلية
+// تحميل الورش من الخادم
 // ============================================
 async function loadWorkshops() {
     try {
-        console.log('📡 جاري تحميل الورش من قاعدة البيانات المحلية...');
+        console.log('📡 جاري تحميل الورش من الخادم...');
         
-        // ✅ جلب البيانات من IndexedDB
-        const workshops = await getAllWorkshopsLocal();
+        const response = await fetch(API_URL);
+        const result = await response.json();
         
-        if (workshops && workshops.length > 0) {
-            console.log('✅ تم جلب', workshops.length, 'ورشة من قاعدة البيانات المحلية');
-            allWorkshops = workshops;
-            filteredWorkshops = [...allWorkshops];
-            
-            populateFilters(allWorkshops);
-            renderTable();
-            updateResultsCount();
-            
-            // ✅ تحديث إحصائيات الموظفين في الخلفية
-            await updateAllEmployeesStats();
-            
-        } else {
-            console.log('📡 لا توجد بيانات محلية، جاري التحميل من الخادم...');
-            
-            // محاولة جلب البيانات من الخادم
-            try {
-                const response = await fetch(API_URL);
-                const result = await response.json();
-                
-                if (result.status === 'success' && result.data) {
-                    const data = result.data;
-                    
-                    // حفظ الورش في قاعدة البيانات المحلية
-                    if (data.allWorkshops && data.allWorkshops.length > 0) {
-                        await db.workshops.bulkAdd(data.allWorkshops);
-                        allWorkshops = data.allWorkshops;
-                        console.log('✅ تم حفظ', allWorkshops.length, 'ورشة من الخادم');
-                    }
-                    
-                    // حفظ الموظفين
-                    if (data.allEmployees && data.allEmployees.length > 0) {
-                        await db.employees.bulkAdd(data.allEmployees);
-                    }
-                    
-                    filteredWorkshops = [...allWorkshops];
-                    populateFilters(allWorkshops);
-                    renderTable();
-                    updateResultsCount();
-                } else {
-                    showError('لا توجد بيانات متاحة حالياً');
-                }
-            } catch (fetchError) {
-                console.error('❌ خطأ في جلب البيانات من الخادم:', fetchError);
-                showError('حدث خطأ في الاتصال بالخادم. يرجى المحاولة لاحقاً.');
-            }
+        if (result.status !== 'success' || !result.data) {
+            showError('حدث خطأ في تحميل البيانات');
+            return;
         }
         
+        const data = result.data;
+        allWorkshops = data.allWorkshops || data.recentWorkshops || [];
+        filteredWorkshops = [...allWorkshops];
+        
+        console.log('📚 عدد الورش:', allWorkshops.length);
+        
+        populateFilters(allWorkshops);
+        renderTable();
+        updateResultsCount();
+        
     } catch (error) {
-        console.error('❌ خطأ في تحميل الورش:', error);
-        showError('حدث خطأ في تحميل البيانات');
+        console.error('❌ خطأ:', error);
+        showError('حدث خطأ في الاتصال بالخادم');
     }
 }
 
-// ============================================
-// تحديث إحصائيات جميع الموظفين
-// ============================================
-async function updateAllEmployeesStats() {
-    try {
-        const workshops = await getAllWorkshopsLocal();
-        const employeeIds = [...new Set(workshops.map(w => w.employeeId).filter(Boolean))];
-        
-        for (const id of employeeIds) {
-            await updateEmployeeStats(id);
-        }
-        console.log('✅ تم تحديث إحصائيات', employeeIds.length, 'موظف');
-    } catch (error) {
-        console.error('❌ خطأ في تحديث إحصائيات الموظفين:', error);
-    }
-}
-
-// ============================================
-// تحديث البيانات عند التغيير
-// ============================================
-async function refreshWorkshops() {
-    console.log('🔄 تحديث سجل الورش...');
-    await loadWorkshops();
-}
-
-// ============================================
-// عرض رسالة خطأ
-// ============================================
 function showError(message) {
     const tbody = document.getElementById('workshopsBody');
     if (tbody) {
@@ -117,9 +55,6 @@ function showError(message) {
     }
 }
 
-// ============================================
-// تعبئة خيارات التصفية
-// ============================================
 function populateFilters(workshops) {
     const departments = [...new Set(workshops.map(w => w.department).filter(Boolean))];
     const years = [...new Set(workshops.map(w => {
@@ -182,9 +117,6 @@ function populateFilters(workshops) {
     }
 }
 
-// ============================================
-// تطبيق الفلاتر
-// ============================================
 function applyFilters() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const department = document.getElementById('filterDepartment').value;
@@ -229,9 +161,6 @@ function applyFilters() {
     updateResultsCount();
 }
 
-// ============================================
-// عرض الجدول مع ترقيم الصفحات
-// ============================================
 function renderTable() {
     const tbody = document.getElementById('workshopsBody');
     if (!tbody) return;
@@ -272,9 +201,6 @@ function renderTable() {
     renderPagination();
 }
 
-// ============================================
-// عرض أزرار الترقيم
-// ============================================
 function renderPagination() {
     const container = document.getElementById('pagination');
     if (!container) return;
@@ -300,17 +226,11 @@ function renderPagination() {
     });
 }
 
-// ============================================
-// تحديث عدد النتائج
-// ============================================
 function updateResultsCount() {
     const el = document.getElementById('resultsCount');
     if (el) el.textContent = filteredWorkshops.length;
 }
 
-// ============================================
-// تصدير إلى Excel
-// ============================================
 function exportToExcel() {
     if (!filteredWorkshops || filteredWorkshops.length === 0) {
         alert('لا توجد بيانات للتصدير');
@@ -340,9 +260,6 @@ function exportToExcel() {
     link.click();
 }
 
-// ============================================
-// تنسيق التاريخ
-// ============================================
 function formatDate(dateString) {
     if (!dateString) return '-';
     try {
@@ -358,9 +275,7 @@ function formatDate(dateString) {
     }
 }
 
-// ============================================
 // أحداث الصفحة
-// ============================================
 document.addEventListener('DOMContentLoaded', function() {
     console.log('📄 صفحة سجل الورش جاهزة');
     loadWorkshops();
@@ -380,18 +295,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const clearBtn = document.getElementById('clearFilters');
     if (clearBtn) {
         clearBtn.addEventListener('click', function() {
-            const searchInput = document.getElementById('searchInput');
-            if (searchInput) searchInput.value = '';
-            
-            const deptFilter = document.getElementById('filterDepartment');
-            if (deptFilter) deptFilter.value = 'all';
-            
-            const yearFilter = document.getElementById('filterYear');
-            if (yearFilter) yearFilter.value = 'all';
-            
-            const monthFilter = document.getElementById('filterMonth');
-            if (monthFilter) monthFilter.value = 'all';
-            
+            document.getElementById('searchInput').value = '';
+            document.getElementById('filterDepartment').value = 'all';
+            document.getElementById('filterYear').value = 'all';
+            document.getElementById('filterMonth').value = 'all';
             applyFilters();
         });
     }
@@ -399,21 +306,3 @@ document.addEventListener('DOMContentLoaded', function() {
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) exportBtn.addEventListener('click', exportToExcel);
 });
-
-// ============================================
-// الاستماع لتحديثات البيانات من صفحات أخرى
-// ============================================
-window.addEventListener('storage', function(e) {
-    if (e.key === 'bth_workshops_updated') {
-        console.log('🔄 تم تحديث البيانات من صفحة أخرى، جاري التحديث...');
-        loadWorkshops();
-    }
-});
-
-// ✅ الاستماع لتحديثات المزامنة
-document.addEventListener('workshopsUpdated', function() {
-    console.log('🔄 تم تحديث البيانات، جاري التحديث...');
-    loadWorkshops();
-});
-
-console.log('✅ workshops.js تم تحميله بنجاح');
