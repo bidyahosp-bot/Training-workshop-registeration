@@ -2,7 +2,7 @@
 // Main JavaScript - Bidiya Training Hub (إصدار خفيف)
 // ============================================
 
-const API_URL = 'https://script.google.com/macros/s/AKfycbxfQwivy7ssV_SpOgE_2Ev5llVva7RWNhr8-ARorlWGvUGW1GyBUnGTinzBiffoaAp4/exec';
+const API_URL = 'https://script.google.com/macros/s/AKfycbz211s9Fz-bWxA0nffBZ9Tt8om2RdwlYXTZgkCZb_3l3vYoy_nt8svd4iNZMFZ7G9VG/exec';
 
 // تحميل البيانات من الخادم مباشرة
 async function loadHomePageData() {
